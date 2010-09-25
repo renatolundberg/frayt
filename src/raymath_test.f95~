@@ -1,0 +1,4 @@
+PROGRAM test
+  PRINT *, 'Iniciando testes...'
+  
+END PROGRAM test
