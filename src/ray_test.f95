@@ -1,4 +1,4 @@
-MODULE ray_test
+MODULE raytest
   IMPLICIT NONE
   TYPE test_result
     INTEGER :: assertions, failures
@@ -14,7 +14,22 @@ FUNCTION assertTrue(res, cond)
     res%failures = res%failures + 1
   END IF
   assertTrue = .NOT. cond;
-  RETURN;
+  RETURN
 END FUNCTION assertTrue
 
-END MODULE ray_test
+FUNCTION assertFalse(res, cond)
+  TYPE(test_result), INTENT(INOUT) :: res
+  LOGICAL          , INTENT(IN)    :: cond
+  LOGICAL                          :: assertFalse
+  assertFalse = assertTrue(res, .NOT. cond)
+  RETURN
+END FUNCTION assertFalse
+
+FUNCTION is_equals_r(x, y)
+  REAL     :: x, y
+  LOGICAL is_equals_r
+  is_equals_r = ABS(x - y) < 0.00001
+  RETURN
+END FUNCTION is_equals_r
+
+END MODULE raytest
