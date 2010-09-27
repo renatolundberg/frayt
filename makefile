@@ -1,5 +1,5 @@
 COMP = gfortran
-COMP_FLAGS = -O3 -Wall -pedantic -J bin -g
+COMP_FLAGS = -O3 -Wall -pedantic -Jbin -g
 
 tests : raymath_test rayforms_test
 	bin/raymath_test
