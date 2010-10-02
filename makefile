@@ -37,7 +37,6 @@ bin/raytracer.o: ${MODULES}
 clean:
 	rm -rf bin/* raytracer
 
-# regras para edição
 edit:
 	editor -p ${SRCFILES} makefile
 

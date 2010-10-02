@@ -50,6 +50,8 @@ MODULE rayforms
     TYPE(sphere)   :: sphere
     TYPE(cylinder) :: cylinder
     TYPE(cone)     :: cone
+    INTEGER, DIMENSION(3) :: luminosity, reflection, transparency
+    INTEGER :: refraction
   END TYPE geom_form
 CONTAINS
 
