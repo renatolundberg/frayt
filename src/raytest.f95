@@ -25,11 +25,11 @@ FUNCTION assertFalse(res, cond)
   RETURN
 END FUNCTION assertFalse
 
-FUNCTION is_equals_r(x, y)
+FUNCTION is_equal_r(x, y)
   REAL     :: x, y
-  LOGICAL is_equals_r
-  is_equals_r = ABS(x - y) < 0.00001
+  LOGICAL is_equal_r
+  is_equal_r = ABS(x - y) < 0.00001
   RETURN
-END FUNCTION is_equals_r
+END FUNCTION is_equal_r
 
 END MODULE raytest

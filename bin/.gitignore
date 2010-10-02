@@ -1,3 +1,2 @@
-*_test
-*.o
-*.mod
+*
+!.gitignore

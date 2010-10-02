@@ -1,14 +1,36 @@
 MODULE raymath
   IMPLICIT NONE
 
+  ! um vetor
   TYPE vector
      REAL :: x, y, z
   END TYPE vector
+
+  ! uma matriz
   TYPE matrix
      REAL, DIMENSION(4,4) :: mat
   END TYPE matrix
 
+  ! o zero
   TYPE(vector), PARAMETER :: ZERO_VECTOR = vector(0,0,0) 
+
+  ! definicoes de operadores
+  INTERFACE OPERATOR(-)
+    MODULE PROCEDURE vector_subtract
+  END INTERFACE
+
+  INTERFACE OPERATOR(+)
+    MODULE PROCEDURE vector_sum
+  END INTERFACE
+
+  INTERFACE OPERATOR(*)
+    MODULE PROCEDURE vector_cross_product
+  END INTERFACE
+
+  INTERFACE OPERATOR(//)
+    MODULE PROCEDURE vector_scalar_product
+  END INTERFACE
+
 CONTAINS
 
 ! transformacao de um vetor de posicao
@@ -53,7 +75,7 @@ PURE FUNCTION vector_sum(v1, v2)
   RETURN
 END FUNCTION vector_sum
 
-! produto escalar de dois vetores
+! produto interno de dois vetores
 PURE FUNCTION vector_scalar_product(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
   REAL vector_scalar_product
@@ -72,7 +94,7 @@ PURE FUNCTION vector_real_product(v, x)
   RETURN
 END FUNCTION vector_real_product
 
-! subtracao de dois vetores
+! produto de dois vetores
 PURE FUNCTION vector_cross_product(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
   TYPE(vector) vector_cross_product

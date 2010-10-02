@@ -1,4 +1,4 @@
-PROGRAM raymath_test
+PROGRAM rayforms_test
   USE raymath
   USE raytest
   USE rayforms
@@ -39,19 +39,19 @@ SUBROUTINE test_create_triangle(res)
   IF (failure) THEN
     PRINT *, "create_triangle gerou tipo. Esperado", TP_TRIANGLE, " mas encontrado ", r%tp
   END IF
-  failure = assertTrue(res, is_equals_v(en, r%triangle%n))
+  failure = assertTrue(res, is_equal_v(en, r%triangle%n))
   IF (failure) THEN
     PRINT *, "create_triangle gerou normal errada. Esperado", en, " mas encontrado ", r%triangle%n
   END IF
-  failure = assertTrue(res, is_equals_r(euu, r%triangle%uu))
+  failure = assertTrue(res, is_equal_r(euu, r%triangle%uu))
   IF (failure) THEN
     PRINT *, "create_triangle gerado com produto escalar uu errado. Esperado", euu, " mas encontrado ", r%triangle%uu
   END IF
-  failure = assertTrue(res, is_equals_r(euv, r%triangle%uv))
+  failure = assertTrue(res, is_equal_r(euv, r%triangle%uv))
   IF (failure) THEN
     PRINT *, "create_triangle gerado com produto escalar uv errado. Esperado", euv, " mas encontrado ", r%triangle%uv
   END IF
-  failure = assertTrue(res, is_equals_r(evv, r%triangle%vv))
+  failure = assertTrue(res, is_equal_r(evv, r%triangle%vv))
   IF (failure) THEN
     PRINT *, "create_triangle gerado com produto escalar vv errado. Esperado", evv, " mas encontrado ", r%triangle%vv
   END IF
@@ -69,7 +69,7 @@ SUBROUTINE test_intersection_triangle_center(res)
   TYPE(ray)           :: r = ray(vector(0,0,0), vector(0,0,1))
   LOGICAL             :: failure
   f = create_triangle(a, u, v)
-  failure = assertTrue(res, is_equals_v(en, f%triangle%n))
+  failure = assertTrue(res, is_equal_v(en, f%triangle%n))
   IF (failure) THEN
     PRINT *, "create_triangle gerou normal errada. Esperado", en, " mas encontrado ", f%triangle%n
   END IF
@@ -145,7 +145,7 @@ SUBROUTINE check_intersection_success(res, prefix, f, r, ei)
   IF (failure) THEN
     PRINT *, prefix, ": find_intersection nao encontrou interseccao entre ", r, " e ", f, ", mas deveria"
   END IF
-  failure = assertTrue(res, is_equals_v(ei, i%point))
+  failure = assertTrue(res, is_equal_v(ei, i%point))
   IF (failure) THEN
     PRINT *, prefix, ": find_intersection encontrou ponto errado. Esperado", ei, " mas encontrado ", i%point
   END IF
@@ -165,11 +165,11 @@ SUBROUTINE check_intersection_miss(res, prefix, f, r)
   END IF
 END SUBROUTINE check_intersection_miss
 
-FUNCTION is_equals_v(v, u)
+FUNCTION is_equal_v(v, u)
   TYPE(vector)      :: v, u
-  LOGICAL is_equals_v
-  is_equals_v = is_equals_r(v%x, u%x) .AND. is_equals_r(v%y, u%y) .AND. is_equals_r(v%z, u%z)
+  LOGICAL is_equal_v
+  is_equal_v = is_equal_r(v%x, u%x) .AND. is_equal_r(v%y, u%y) .AND. is_equal_r(v%z, u%z)
   RETURN
-END FUNCTION is_equals_v
+END FUNCTION is_equal_v
 
-END PROGRAM raymath_test
+END PROGRAM rayforms_test
