@@ -53,7 +53,7 @@ FUNCTION raytrace(r, depth) RESULT (color)
   TYPE(RAY), INTENT(IN) :: r
   INTEGER, INTENT(IN) :: depth
   INTEGER :: color
-  color = 0 + depth + r%source%x ! so pra nao dar warning
+  color = 0 + depth + r%source%v(1) ! so pra nao dar warning
 END FUNCTION
 
 END PROGRAM

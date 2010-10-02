@@ -23,17 +23,17 @@ CONTAINS
 
 SUBROUTINE test_create_triangle(res)
   TYPE(test_result)   :: res
-  TYPE(vector)        :: a = vector(1, 1, 1)
-  TYPE(vector)        :: u = vector(1, 2, 3)
-  TYPE(vector)        :: v = vector(3, 2, 1)
+  TYPE(vector)        :: a = vector((/1, 1, 1/))
+  TYPE(vector)        :: u = vector((/1, 2, 3/))
+  TYPE(vector)        :: v = vector((/3, 2, 1/))
   TYPE(vector)        :: en
   REAL                :: euu, euv, evv
   TYPE(geom_form)     :: r
   LOGICAL             :: failure
   en = vector_cross_product(v, u)
-  euu = vector_scalar_product(u, u)
-  euv = vector_scalar_product(u, v)
-  evv = vector_scalar_product(v, v)
+  euu = vector_dot_product(u, u)
+  euv = vector_dot_product(u, v)
+  evv = vector_dot_product(v, v)
   r = create_triangle(a, u, v)
   failure = assertTrue(res, TP_TRIANGLE == r%tp)
   IF (failure) THEN
@@ -61,12 +61,12 @@ END SUBROUTINE test_create_triangle
 SUBROUTINE test_intersection_triangle_center(res)
   TYPE(test_result)   :: res
   TYPE(geom_form)     :: f
-  TYPE(vector)        :: a =  vector( 0,-1, 1)
-  TYPE(vector)        :: u =  vector( 1, 2, 0)
-  TYPE(vector)        :: v =  vector(-1, 2, 0)
-  TYPE(vector)        :: en = vector( 0, 0,-4)
-  TYPE(vector)        :: ei = vector( 0, 0, 1)
-  TYPE(ray)           :: r = ray(vector(0,0,0), vector(0,0,1))
+  TYPE(vector)        :: a =  vector((/ 0,-1, 1/))
+  TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
+  TYPE(vector)        :: v =  vector((/-1, 2, 0/))
+  TYPE(vector)        :: en = vector((/ 0, 0,-4/))
+  TYPE(vector)        :: ei = vector((/ 0, 0, 1/))
+  TYPE(ray)           :: r = ray(vector((/0,0,0/)), vector((/0,0,1/)))
   LOGICAL             :: failure
   f = create_triangle(a, u, v)
   failure = assertTrue(res, is_equal_v(en, f%triangle%n))
@@ -79,11 +79,11 @@ END SUBROUTINE test_intersection_triangle_center
 SUBROUTINE test_intersection_triangle_not_centered(res)
   TYPE(test_result)   :: res
   TYPE(geom_form)     :: f
-  TYPE(vector)        :: a =  vector( 0.1,-1.2, 1.1)
-  TYPE(vector)        :: u =  vector( 1, 2, 0)
-  TYPE(vector)        :: v =  vector(-1, 2, 0)
-  TYPE(vector)        :: ei = vector( 0, 0, 1.1)
-  TYPE(ray)           :: r = ray(vector(0,0,0), vector(0,0,1))
+  TYPE(vector)        :: a =  vector((/ 0.1,-1.2, 1.1/))
+  TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
+  TYPE(vector)        :: v =  vector((/-1, 2, 0/))
+  TYPE(vector)        :: ei = vector((/ 0.0, 0.0, 1.1/))
+  TYPE(ray)           :: r = ray(vector((/0.0,0.0,0.0/)), vector((/0.0,0.0,1.0/)))
   f = create_triangle(a, u, v)
   CALL check_intersection_success(res, "intersection_triangle_not_centered", f, r, ei)
 END SUBROUTINE test_intersection_triangle_not_centered
@@ -91,11 +91,11 @@ END SUBROUTINE test_intersection_triangle_not_centered
 SUBROUTINE test_intersection_triangle_edge(res)
   TYPE(test_result)   :: res
   TYPE(geom_form)     :: f
-  TYPE(vector)        :: a =  vector( 0,-1, 1)
-  TYPE(vector)        :: u =  vector( 1, 2, 0)
-  TYPE(vector)        :: v =  vector(-1, 2, 0)
-  TYPE(vector)        :: ei = vector( 0, 1, 1)
-  TYPE(ray)           :: r = ray(vector(0,1,0), vector(0,0,1))
+  TYPE(vector)        :: a =  vector((/ 0,-1, 1/))
+  TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
+  TYPE(vector)        :: v =  vector((/-1, 2, 0/))
+  TYPE(vector)        :: ei = vector((/ 0, 1, 1/))
+  TYPE(ray)           :: r = ray(vector((/0,1,0/)), vector((/0,0,1/)))
   f = create_triangle(a, u, v)
   CALL check_intersection_success(res, "intersection_triangle_edge", f, r, ei)
 END SUBROUTINE test_intersection_triangle_edge
@@ -103,11 +103,11 @@ END SUBROUTINE test_intersection_triangle_edge
 SUBROUTINE test_intersection_triangle_vertex(res)
   TYPE(test_result)   :: res
   TYPE(geom_form)     :: f
-  TYPE(vector)        :: a =  vector( 0,-1, 1)
-  TYPE(vector)        :: u =  vector( 1, 2, 0)
-  TYPE(vector)        :: v =  vector(-1, 2, 0)
-  TYPE(vector)        :: ei = vector( 1, 1, 1)
-  TYPE(ray)           :: r = ray(vector(1,1,0), vector(0,0,1))
+  TYPE(vector)        :: a =  vector((/ 0,-1, 1/))
+  TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
+  TYPE(vector)        :: v =  vector((/-1, 2, 0/))
+  TYPE(vector)        :: ei = vector((/ 1, 1, 1/))
+  TYPE(ray)           :: r = ray(vector((/1,1,0/)), vector((/0,0,1/)))
   f = create_triangle(a, u, v)
   CALL check_intersection_success(res, "intersection_triangle_vertex", f, r, ei)
 END SUBROUTINE test_intersection_triangle_vertex
@@ -116,14 +116,14 @@ END SUBROUTINE test_intersection_triangle_vertex
 SUBROUTINE test_intersection_triangle_miss(res)
   TYPE(test_result)   :: res
   TYPE(geom_form)     :: f
-  TYPE(vector)        :: a =  vector( 0,-1, 1)
-  TYPE(vector)        :: u =  vector( 1, 2, 0)
-  TYPE(vector)        :: v =  vector(-1, 2, 0)
-  TYPE(ray)           :: r1 = ray(vector(1.1,1,0), vector(0,0,1))
-  TYPE(ray)           :: r2 = ray(vector(-1.1,1,0), vector(0,0,1))
-  TYPE(ray)           :: r3 = ray(vector(1,1.1,0), vector(0,0,1))
-  TYPE(ray)           :: r4 = ray(vector(0,0,0), vector(0,0,-1))
-  TYPE(ray)           :: r5 = ray(vector(0,0,0), vector(-1,-1,1))
+  TYPE(vector)        :: a =  vector((/ 0,-1, 1/))
+  TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
+  TYPE(vector)        :: v =  vector((/-1, 2, 0/))
+  TYPE(ray)           :: r1 = ray(vector((/1.1,1.0,0.0/)), vector((/0.0,0.0,1.0/)))
+  TYPE(ray)           :: r2 = ray(vector((/-1.1,1.0,0.0/)), vector((/0.0,0.0,1.0/)))
+  TYPE(ray)           :: r3 = ray(vector((/1.0,1.1,0.0/)), vector((/0.0,0.0,1.0/)))
+  TYPE(ray)           :: r4 = ray(vector((/.0,.0,.0/)), vector((/0.0,0.0,-1.0/)))
+  TYPE(ray)           :: r5 = ray(vector((/.0,.0,.0/)), vector((/-1.0,-1.0,1.0/)))
   f = create_triangle(a, u, v)
   CALL check_intersection_miss(res, "intersection_triangle_miss r1", f, r1)
   CALL check_intersection_miss(res, "intersection_triangle_miss r2", f, r2)
@@ -168,7 +168,7 @@ END SUBROUTINE check_intersection_miss
 FUNCTION is_equal_v(v, u)
   TYPE(vector)      :: v, u
   LOGICAL is_equal_v
-  is_equal_v = is_equal_r(v%x, u%x) .AND. is_equal_r(v%y, u%y) .AND. is_equal_r(v%z, u%z)
+  is_equal_v = is_equal_r(v%v(1), u%v(1)) .AND. is_equal_r(v%v(2), u%v(2)) .AND. is_equal_r(v%v(3), u%v(3))
   RETURN
 END FUNCTION is_equal_v
 

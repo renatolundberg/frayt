@@ -61,9 +61,9 @@ PURE FUNCTION create_triangle(a, u, v)
   create_triangle%triangle%u = u
   create_triangle%triangle%v = v
   create_triangle%triangle%n = vector_cross_product(v, u)
-  create_triangle%triangle%uu = vector_scalar_product(u, u)
-  create_triangle%triangle%uv = vector_scalar_product(u, v)
-  create_triangle%triangle%vv = vector_scalar_product(v, v)
+  create_triangle%triangle%uu = vector_dot_product(u, u)
+  create_triangle%triangle%uv = vector_dot_product(u, v)
+  create_triangle%triangle%vv = vector_dot_product(v, v)
   RETURN
 END FUNCTION create_triangle
 
@@ -104,8 +104,8 @@ PURE FUNCTION find_intersection_triangle(f, r)
   n = f%triangle%n
   dir = r%direction
   w0 = vector_subtract(r%source, f%triangle%a)
-  a = -vector_scalar_product(w0, n)
-  b = vector_scalar_product(dir, n)
+  a = -vector_dot_product(w0, n)
+  b = vector_dot_product(dir, n)
 
   IF (ABS(b) < SMALL_NUM) THEN     ! raio é paralelo ao plano
     find_intersection_triangle%intersects = .FALSE.
@@ -127,8 +127,8 @@ PURE FUNCTION find_intersection_triangle(f, r)
   uv = f%triangle%uv
   vv = f%triangle%vv
   w = vector_subtract(I, f%triangle%a)
-  wu = vector_scalar_product(w,u)
-  wv = vector_scalar_product(w,v)
+  wu = vector_dot_product(w,u)
+  wv = vector_dot_product(w,v)
   D = uv * uv - uu * vv
 
   s = (uv * wv - vv * wu) / D

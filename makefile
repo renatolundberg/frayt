@@ -2,6 +2,7 @@ FC = gfortran
 FCFLAGS = -O3 -Wall -pedantic -Jbin -g
 
 MODULES = bin/raymath.o bin/rayforms.o bin/raytest.o
+SRCFILES = src/*
 
 all: raytracer tests
 
@@ -36,4 +37,8 @@ bin/raytracer.o: ${MODULES}
 clean:
 	rm -rf bin/* raytracer
 
-.PHONY: tests
+# regras para edição
+edit:
+	editor -p ${SRCFILES} makefile
+
+.PHONY: all tests clean edit

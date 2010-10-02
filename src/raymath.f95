@@ -3,7 +3,7 @@ MODULE raymath
 
   ! um vetor
   TYPE vector
-     REAL :: x, y, z
+     REAL, DIMENSION (3) :: v
   END TYPE vector
 
   ! uma matriz
@@ -12,7 +12,7 @@ MODULE raymath
   END TYPE matrix
 
   ! o zero
-  TYPE(vector), PARAMETER :: ZERO_VECTOR = vector(0,0,0) 
+  TYPE(vector), PARAMETER :: ZERO_VECTOR = vector( (/0,0,0/) ) 
 
   ! definicoes de operadores
   INTERFACE OPERATOR(-)
@@ -23,12 +23,16 @@ MODULE raymath
     MODULE PROCEDURE vector_sum
   END INTERFACE
 
-  INTERFACE OPERATOR(*)
-    MODULE PROCEDURE vector_cross_product
+  INTERFACE OPERATOR(.DOT.)
+    MODULE PROCEDURE vector_dot_product
   END INTERFACE
 
-  INTERFACE OPERATOR(//)
-    MODULE PROCEDURE vector_scalar_product
+  INTERFACE OPERATOR(*)
+    MODULE PROCEDURE vector_real_product
+  END INTERFACE
+
+  INTERFACE OPERATOR(.CROSS.)
+    MODULE PROCEDURE vector_cross_product
   END INTERFACE
 
 CONTAINS
@@ -38,9 +42,9 @@ PURE FUNCTION pos_vector_transf(m, v)
   TYPE(vector), INTENT (IN)  :: v
   TYPE(matrix), INTENT (IN)  :: m
   TYPE(vector) pos_vector_transf
-  pos_vector_transf%x = m%mat(1,1) * v%x + m%mat(1,2) * v%y + m%mat(1,3) * v%z + m%mat(1,4)
-  pos_vector_transf%y = m%mat(2,1) * v%x + m%mat(2,2) * v%y + m%mat(2,3) * v%z + m%mat(2,4)
-  pos_vector_transf%z = m%mat(3,1) * v%x + m%mat(3,2) * v%y + m%mat(3,3) * v%z + m%mat(3,4)
+  pos_vector_transf%v(1) = m%mat(1,1) * v%v(1) + m%mat(1,2) * v%v(2) + m%mat(1,3) * v%v(3) + m%mat(1,4)
+  pos_vector_transf%v(2) = m%mat(2,1) * v%v(1) + m%mat(2,2) * v%v(2) + m%mat(2,3) * v%v(3) + m%mat(2,4)
+  pos_vector_transf%v(3) = m%mat(3,1) * v%v(1) + m%mat(3,2) * v%v(2) + m%mat(3,3) * v%v(3) + m%mat(3,4)
   RETURN
 END FUNCTION pos_vector_transf
 
@@ -49,9 +53,9 @@ PURE FUNCTION dir_vector_transf(m, v)
   TYPE(vector), INTENT (IN)  :: v
   TYPE(matrix), INTENT (IN)  :: m
   TYPE(vector) dir_vector_transf
-  dir_vector_transf%x = m%mat(1,1) * v%x + m%mat(1,2) * v%y + m%mat(1,3) * v%z
-  dir_vector_transf%y = m%mat(2,1) * v%x + m%mat(2,2) * v%y + m%mat(2,3) * v%z
-  dir_vector_transf%z = m%mat(3,1) * v%x + m%mat(3,2) * v%y + m%mat(3,3) * v%z
+  dir_vector_transf%v(1) = m%mat(1,1) * v%v(1) + m%mat(1,2) * v%v(2) + m%mat(1,3) * v%v(3)
+  dir_vector_transf%v(2) = m%mat(2,1) * v%v(1) + m%mat(2,2) * v%v(2) + m%mat(2,3) * v%v(3)
+  dir_vector_transf%v(3) = m%mat(3,1) * v%v(1) + m%mat(3,2) * v%v(2) + m%mat(3,3) * v%v(3)
   RETURN
 END FUNCTION dir_vector_transf
 
@@ -59,9 +63,10 @@ END FUNCTION dir_vector_transf
 PURE FUNCTION vector_subtract(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
   TYPE(vector) vector_subtract
-  vector_subtract%x = v1%x - v2%x
-  vector_subtract%y = v1%y - v2%y
-  vector_subtract%z = v1%z - v2%z
+  !vector_subtract(1) = v1%v(1) - v2%v(1)
+  !vector_subtract(2) = v1%v(2) - v2%v(2)
+  !vector_subtract(3) = v1%v(3) - v2%v(3)
+  vector_subtract%v = v1%v - v2%v
   RETURN
 END FUNCTION vector_subtract
 
@@ -69,28 +74,31 @@ END FUNCTION vector_subtract
 PURE FUNCTION vector_sum(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
   TYPE(vector) vector_sum
-  vector_sum%x = v1%x + v2%x
-  vector_sum%y = v1%y + v2%y
-  vector_sum%z = v1%z + v2%z
+  !vector_sum%x = v1%v(1) + v2%v(1)
+  !vector_sum%y = v1%v(2) + v2%v(2)
+  !vector_sum%z = v1%v(3) + v2%v(3)
+  vector_sum%v = v1%v + v2%v
   RETURN
 END FUNCTION vector_sum
 
 ! produto interno de dois vetores
-PURE FUNCTION vector_scalar_product(v1, v2)
+PURE FUNCTION vector_dot_product(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
-  REAL vector_scalar_product
-  vector_scalar_product = v1%x * v2%x + v1%y * v2%y + v1%z * v2%z
+  REAL vector_dot_product
+  !vector_dot_product = v1%v(1) * v2%v(1) + v1%v(2) * v2%v(2) + v1%v(3) * v2%v(3)
+  vector_dot_product = DOT_PRODUCT(v1%v, v2%v)
   RETURN
-END FUNCTION vector_scalar_product
+END FUNCTION vector_dot_product
 
 ! produto de um vetor por um escalar
 PURE FUNCTION vector_real_product(v, x)
   TYPE(vector), INTENT (IN)  :: v
   REAL        , INTENT (IN)  :: x
   TYPE(vector) vector_real_product
-  vector_real_product%x = v%x * x
-  vector_real_product%y = v%y * x
-  vector_real_product%z = v%z * x
+  !vector_real_product%x = v%v(1) * x
+  !vector_real_product%y = v%v(2) * x
+  !vector_real_product%z = v%v(3) * x
+  vector_real_product%v = v%v * x
   RETURN
 END FUNCTION vector_real_product
 
@@ -98,9 +106,9 @@ END FUNCTION vector_real_product
 PURE FUNCTION vector_cross_product(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
   TYPE(vector) vector_cross_product
-  vector_cross_product%x = v1%y * v2%z - v1%z * v2%y
-  vector_cross_product%y = v1%z * v2%x - v1%x * v2%z
-  vector_cross_product%z = v1%x * v2%y - v1%y * v2%x
+  vector_cross_product%v(1) = v1%v(2) * v2%v(3) - v1%v(3) * v2%v(2)
+  vector_cross_product%v(2) = v1%v(3) * v2%v(1) - v1%v(1) * v2%v(3)
+  vector_cross_product%v(3) = v1%v(1) * v2%v(2) - v1%v(2) * v2%v(1)
   RETURN
 END FUNCTION vector_cross_product
 
