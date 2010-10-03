@@ -6,7 +6,7 @@ PROGRAM raytracer
 
   ! variaveis auxiliares
   CHARACTER(50) :: buffer
-  INTEGER :: i, j, color
+  INTEGER :: i, j, color, nobj
   TYPE(RAY) :: r
   TYPE(VECTOR) :: pov
   TYPE(VECTOR) :: pixel
@@ -23,6 +23,7 @@ PROGRAM raytracer
 
   CALL read_commandline_args
   CALL read_worldfile
+  !CALL list_objects
   CALL read_povfile
 
   ! loop principal
@@ -67,7 +68,7 @@ END FUNCTION
 ! le o arquivo de entrada com a descricao do mundo
 SUBROUTINE read_worldfile
   TYPE(vector) :: a, u, v
-  INTEGER :: ios = 0, formtype, i
+  INTEGER :: ios = 0, formtype, i = 0
   REAL x, y, z
   OPEN (unit = 1, file = worldfile)
   objread: DO
@@ -76,9 +77,12 @@ SUBROUTINE read_worldfile
     READ (1, *, iostat=ios) formtype
     IF (ios < 0) EXIT objread ! interrompe a leitura caso encontre EOF
     objects(i)%tp = formtype
-    READ (1, *) objects(i)%luminosity(1), objects(i)%luminosity(2), objects(i)%luminosity(3)
-    READ (1, *) objects(i)%reflection(1), objects(i)%reflection(2), objects(i)%reflection(3)
-    READ (1, *) objects(i)%transparency(1), objects(i)%transparency(2), objects(i)%transparency(3)
+    READ (1,*) x,y,z
+    objects(i)%luminosity = (/x,y,z/)
+    READ (1,*) x,y,z
+    objects(i)%reflection = (/x,y,z/)
+    READ (1,*) x,y,z
+    objects(i)%transparency = (/x,y,z/)
     READ (1, *) objects(i)%refraction
     ! le os dados especificos de cada forma
     SELECT CASE (formtype)
@@ -111,8 +115,40 @@ SUBROUTINE read_worldfile
     END SELECT
   END DO objread
   CLOSE (1)
+  nobj = i-1
 END SUBROUTINE
 
+SUBROUTINE list_objects
+  INTEGER :: i
+  DO i = 1,nobj
+    PRINT *, 'OBJ ', i
+    PRINT *, '  luminosity: ', objects(i)%luminosity(1), objects(i)%luminosity(2), objects(i)%luminosity(3)
+    PRINT *, '  reflection: ', objects(i)%reflection(1), objects(i)%reflection(2), objects(i)%reflection(3)
+    PRINT *, '  transparency: ', objects(i)%transparency(1), objects(i)%transparency(2), objects(i)%transparency(3)
+    PRINT *, '  refraction: ', objects(i)%refraction
+    SELECT CASE (objects(i)%tp)
+      CASE (0) ! triangulo
+        PRINT *, '  a: ', objects(i)%triangle%a
+        PRINT *, '  u: ', objects(i)%triangle%u
+        PRINT *, '  v: ', objects(i)%triangle%v
+      CASE (1) ! esfera
+        PRINT *, '  r: ', objects(i)%sphere%r
+        PRINT *, '  c: ', objects(i)%sphere%c
+!      CASE (2) ! cilindro
+!        READ (1,*) x,y,z
+!        objects(i)%cylinder%s = vector((/x,y,z/))
+!        READ (1,*) x,y,z
+!        objects(i)%cylinder%i = vector((/x,y,z/))
+!        READ (1,*) objects(i)%cylinder%r
+!      CASE (3) ! cone
+!        READ (1,*) x,y,z
+!        objects(i)%cone%s = vector((/x,y,z/))
+!        READ (1,*) x,y,z
+!        objects(i)%cone%i = vector((/x,y,z/))
+!        READ (1,*) objects(i)%cone%rs, objects(i)%cone%ri
+    END SELECT
+  END DO
+END SUBROUTINE
 
 ! le o arquivo com informacoes sobre ponto de vista e janela
 SUBROUTINE read_povfile
