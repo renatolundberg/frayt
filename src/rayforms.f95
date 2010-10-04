@@ -2,6 +2,7 @@ MODULE rayforms
   USE raymath
   IMPLICIT NONE
 
+  ! TODO: garantir que direction seja unitario
   TYPE ray
     TYPE(vector) source
     TYPE(vector) direction
@@ -23,7 +24,7 @@ MODULE rayforms
   !Esfera
   TYPE sphere
      TYPE(vector) c   !ponto central
-     REAL r           !raio
+     REAL r, r2       !raio e raio ao quadrado
   END TYPE sphere
 
   !Cilindro
@@ -55,6 +56,8 @@ MODULE rayforms
   END TYPE geom_form
 CONTAINS
 
+
+! constroi um triangulo
 PURE FUNCTION create_triangle(a, u, v)
   TYPE(vector), INTENT(IN) :: a, u, v
   TYPE(geom_form) create_triangle
@@ -69,6 +72,21 @@ PURE FUNCTION create_triangle(a, u, v)
   RETURN
 END FUNCTION create_triangle
 
+
+! constroi uma esfera
+!PURE FUNCTION create_sphere(c, r)
+!  TYPE(vector), INTENT(IN) :: c
+!  REAL, INTENT(IN) :: r
+!  TYPE(geom_form) :: create_sphere
+!  create_sphere%tp = TP_SPHERE
+!  create_sphere%sphere%c = c
+!  create_sphere%sphere%r = r
+!  create_sphere%sphere%r2 = r * r
+!  RETURN
+!END FUNCTION create_sphere
+
+
+! encontra a interseccao de um raio com uma forma geometrica
 PURE FUNCTION find_intersection(f, r) 
   TYPE(geom_form), INTENT(IN) :: f
   TYPE(ray), INTENT(IN) :: r
@@ -76,8 +94,8 @@ PURE FUNCTION find_intersection(f, r)
   SELECT CASE (f%tp)
     CASE (TP_TRIANGLE)
       find_intersection = find_intersection_triangle(f, r)
-!    CASE (TP_SPHERE)
-!      find_intersection = find_intersection_sphere(f, r)
+    CASE (TP_SPHERE)
+      find_intersection = find_intersection_sphere(f, r)
 !    CASE (TP_CYLINDER)
 !      find_intersection = find_intersection_cylinder(f, r)
 !    CASE (TP_CONE)
@@ -150,11 +168,63 @@ PURE FUNCTION find_intersection_triangle(f, r)
   RETURN
 END FUNCTION find_intersection_triangle
 
-!PURE FUNCTION find_intersection_sphere(f, r)
-!  TYPE(geom_form), INTENT(IN) :: f
-!  TYPE(ray), INTENT(IN) :: r
-!  TYPE(intersection) find_intersection_sphere
-!END FUNCTION find_intersection_sphere
+
+! Encontra interseccoes entre um raio e uma esfera. Baseado em:
+!   http://www.devmaster.net/wiki/Ray-sphere_intersection
+!
+! float intersectRaySphere(const Ray &ray, const Sphere &sphere) {
+!   Vec oc = sphere.c - ray.p;
+!   float l2oc = dot(oc,oc);
+!   if (l20c < sphere.r2) { // starts inside of the sphere
+!     float tca = dot(oc, ray.d) / dot(ray.d, ray.d);
+!     // omit division if ray.d is normalized --^
+!     float l2hc = (sphere.r2 - l20c) / dot(ray.d, ray.d) + tca*tca;
+!     // division ---------------------------^
+!     return tca + sqrt(l2hc);
+!   } else {
+!     float tca = dot(oc, ray.d);
+!     if (tca < 0) // points away from the sphere
+!       return std::numeric_limits<float>::infinity();
+!     float l2hc = (sphere.r2 - l20c)/dot(ray.d, ray.d) + (tca*tca);
+!     // division -------------------------^
+!     return l2hc > 0 ?
+!       tca - sqrt(l2hc) : std::numeric_limits<float>::infinity();
+!   }
+!}
+PURE FUNCTION find_intersection_sphere(f, r)
+  TYPE(geom_form), INTENT(IN) :: f
+  TYPE(ray), INTENT(IN) :: r
+  TYPE(intersection) find_intersection_sphere
+  TYPE(vector) :: oc
+  REAL :: l2oc, tca, l2hc
+
+  oc = f%sphere%c - r%source
+  l2oc = oc.DOT.oc
+  tca = oc.DOT.r%direction !TODO: garantir que o vetor direction e' unitario
+
+  IF ( l2oc < f%sphere%r2 ) THEN ! o raio e' gerado dentro da esfera
+    l2hc = ( f%sphere%r2 - l2oc ) + ( tca * tca )
+    find_intersection_sphere%intersects = .TRUE.
+    find_intersection_sphere%point = r%source + ( r%direction * ( tca + SQRT(l2hc) ))
+    RETURN
+  END IF
+
+  IF ( tca < 0 ) THEN ! o raio aponta para o outro lado
+    find_intersection_sphere%intersects = .FALSE.
+    RETURN
+  END IF
+
+  l2hc = ( f%sphere%r2 - l2oc ) + ( tca * tca )
+  IF (l2hc > 0 ) THEN ! TODO: verificar limites de erros numericos
+    find_intersection_sphere%intersects = .TRUE.
+    find_intersection_sphere%point = r%source + ( r%direction * ( tca + SQRT(l2hc) ))
+    RETURN
+  END IF
+
+  find_intersection_sphere%intersects = .FALSE.
+  RETURN
+END FUNCTION find_intersection_sphere
+
 
 !PURE FUNCTION find_intersection_cylinder(f, r)
 !  TYPE(geom_form), INTENT(IN) :: f

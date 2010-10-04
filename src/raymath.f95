@@ -88,7 +88,7 @@ PURE FUNCTION vector_real_product(v, x)
   RETURN
 END FUNCTION vector_real_product
 
-! produto de dois vetores
+! produto cruzado (?) de dois vetores
 PURE FUNCTION vector_cross_product(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
   TYPE(vector) vector_cross_product
