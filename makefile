@@ -1,5 +1,5 @@
 FC = gfortran
-FCFLAGS = -O3 -Wall -pedantic -Jbin -g
+FCFLAGS = -Wall -pedantic -Jbin -g # TODO: colocar O3 de volta
 
 MODULES = bin/raymath.o bin/rayforms.o bin/raytest.o
 SRCFILES = src/*

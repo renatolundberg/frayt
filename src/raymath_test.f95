@@ -15,6 +15,7 @@ PROGRAM raymath_test
   CALL test_vector_real_product(res)
   CALL test_vector_cross_product(res)
   CALL test_linear_solver(res)
+  CALL test_quadratic_solver(res)
 
   PRINT *, "Teste do modulo raymath finalizado. Ocorreram ", res%failures, " falhas em ", res%assertions, " verificacoes."
   IF (res%failures > 0) THEN
@@ -216,6 +217,46 @@ subroutine check_linear_solution(res, c1, c0, e)
   if (failure) then
     print *, "calc_root_of_linear falhou. Esperado", e, " mas encontrado ", r
   end if
+return
 end subroutine check_linear_solution
+
+
+! testes de solucao de equacoes quadraticas
+! exemplos retirados de http://www.purplemath.com/modules/solvquad6.htm
+subroutine test_quadratic_solver(res)
+  type(test_result) :: res
+  type(retval) :: e
+  e%num_val = 2
+  e%value(1) = 3.0
+  e%value(2) = -1.0
+  call check_quadratic_solution(res, 1.0, -2.0, -3.0, e)
+  e%num_val = 2
+  e%value(1) = (-1.0+(sqrt(17.0))) / 2.0
+  e%value(2) = (-1.0-(sqrt(17.0))) / 2.0
+  call check_quadratic_solution(res, 1.0, 1.0, -4.0, e)
+  e%num_val = 1
+  e%value(1) = -4.0 / 2.0
+  e%value(2) = 0.0
+  call check_quadratic_solution(res, 1.0, 4.0, 4.0, e)
+  e%num_val = 0
+  e%value(1) = 0.0
+  e%value(2) = 0.0
+  call check_quadratic_solution(res, 1.0, 1.0, 4.0, e)
+  return
+end subroutine test_quadratic_solver
+
+subroutine check_quadratic_solution(res, c2, c1, c0, e)
+  type(test_result) :: res
+  real :: c2, c1, c0
+  type(retval) :: e, r
+  logical :: failure
+  r = calc_root_of_quadratic(c2, c1, c0)
+  failure = assertTrue(res, r%num_val == e%num_val .AND. r%value(1) == e%value(1) .AND. r%value(2) == e%value(2))
+  if (failure) then
+    print *, "calc_root_of_quadratic falhou. Esperado", e, " mas encontrado ", r
+  end if
+return
+end subroutine check_quadratic_solution
+
 
 END PROGRAM raymath_test

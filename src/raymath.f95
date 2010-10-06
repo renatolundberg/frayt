@@ -97,7 +97,7 @@ END FUNCTION vector_real_product
 ! produto cruzado (?) de dois vetores
 PURE FUNCTION vector_cross_product(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
-  TYPE(vector) vector_cross_product
+  TYPE(vector) :: vector_cross_product
   vector_cross_product%v(1) = v1%v(2) * v2%v(3) - v1%v(3) * v2%v(2)
   vector_cross_product%v(2) = v1%v(3) * v2%v(1) - v1%v(1) * v2%v(3)
   vector_cross_product%v(3) = v1%v(1) * v2%v(2) - v1%v(2) * v2%v(1)
@@ -126,11 +126,19 @@ pure function fdiv(a, b) result (d)
 end function fdiv
 
 
+! verifica se o numero e' menor do que +- epsilon
+pure function is_zero(a) result(b)
+  real, intent(in) :: a
+  logical :: b
+  b = -epsilon(a) < a .AND. a < epsilon(a)
+end function is_zero
+
+
 ! calcula a raiz de uma equacao linear
 pure function calc_root_of_linear(c1, c0) result(ret)
   real, intent(in) :: c1, c0
   type(retval) :: ret
-  if (-epsilon(c1) < c1 .AND. c1 < epsilon(c1)) then
+  if (is_zero(c1)) then
     ret%num_val = 0
     ret%value(1) = 0.0
   else
@@ -138,6 +146,34 @@ pure function calc_root_of_linear(c1, c0) result(ret)
     ret%value(1) = fdiv(-c0,c1)
   end if
 end function calc_root_of_linear
+
+
+! calcula duas raizes distintas de uma equacao quadratica
+pure function calc_root_of_quadratic(c2, c1, c0) result(ret)
+  real, intent(in) :: c2, c1, c0
+  real :: d
+  type(retval) :: ret
+  if (is_zero(c2)) then
+    ret = calc_root_of_linear(c1, c0)
+  else
+    d = c1 * c1 - (4 * c2 * c0)
+    if (is_zero(d)) then
+      ret%num_val = 1
+      ret%value(1) = fdiv(-c1, 2*c2)
+      ret%value(2) = 0.0
+    else
+      if (d > 0) then
+        ret%num_val = 2
+        ret%value(1) = fdiv(-c1+sqrt(d), 2*c2)
+        ret%value(2) = fdiv(-c1-sqrt(d), 2*c2)
+      else
+        ret%num_val = 0
+        ret%value(1) = 0.0
+        ret%value(2) = 0.0
+      end if
+    end if
+  end if
+end function calc_root_of_quadratic
 
 
 END MODULE raymath
