@@ -14,6 +14,7 @@ PROGRAM raymath_test
   CALL test_vector_dot_product(res)
   CALL test_vector_real_product(res)
   CALL test_vector_cross_product(res)
+  CALL test_linear_solver(res)
 
   PRINT *, "Teste do modulo raymath finalizado. Ocorreram ", res%failures, " falhas em ", res%assertions, " verificacoes."
   IF (res%failures > 0) THEN
@@ -182,9 +183,39 @@ SUBROUTINE check_vector_cross_product(res, v, u, e)
   r = vector_cross_product(v, u)
   failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
   IF (failure) THEN
-    PRINT *, "vector_real_product falhou. Esperado", e, " mas encontrado ", r
+    PRINT *, "vector_cross_product falhou. Esperado", e, " mas encontrado ", r
   END IF
   RETURN
 END SUBROUTINE check_vector_cross_product
+
+
+! testes de solucao de equacoes lineares
+subroutine test_linear_solver(res)
+  type(test_result) :: res
+  type(retval) :: e
+  e%num_val = 1
+  e%value(1) = 3.0
+  call check_linear_solution(res, 2.0, -6.0, e)
+  e%value(1) = -2.0
+  call check_linear_solution(res, 3.0, 6.0, e)
+  e%value(1) = -5.25
+  call check_linear_solution(res, 4.0, 21.0, e)
+  e%num_val = 0
+  e%value(1) = 0.0
+  call check_linear_solution(res, 0.0, -6.0, e)
+  return
+end subroutine test_linear_solver
+
+subroutine check_linear_solution(res, c1, c0, e)
+  type(test_result) :: res
+  real :: c1, c0
+  type(retval) :: e, r
+  logical :: failure
+  r = calc_root_of_linear(c1, c0)
+  failure = assertTrue(res, r%num_val == e%num_val .AND. r%value(1) == e%value(1))
+  if (failure) then
+    print *, "calc_root_of_linear falhou. Esperado", e, " mas encontrado ", r
+  end if
+end subroutine check_linear_solution
 
 END PROGRAM raymath_test

@@ -11,6 +11,12 @@ MODULE raymath
      REAL, DIMENSION(4,4) :: mat
   END TYPE matrix
 
+  ! tipo para retorno de solucoes de equacoes quadraticas
+  TYPE retval
+    INTEGER :: num_val
+    REAL, DIMENSION(2) :: value
+  END TYPE retval
+
   ! o zero
   TYPE(vector), PARAMETER :: ZERO_VECTOR = vector( (/0,0,0/) ) 
 
@@ -97,5 +103,41 @@ PURE FUNCTION vector_cross_product(v1, v2)
   vector_cross_product%v(3) = v1%v(1) * v2%v(2) - v1%v(2) * v2%v(1)
   RETURN
 END FUNCTION vector_cross_product
+
+! baseado em: http://fuzzyphoton.tripod.com/howtowrt.htm#step1
+pure function fdiv(a, b) result (d)
+  real, intent(in) :: a, b
+  real :: d
+
+  if (a == 0) then
+    d = 0
+    return
+  end if
+
+  if (b == 0) then
+    d = sign(huge(d),a)
+  else
+    if ((a+b) == a) then
+      d = sign(huge(d),a*b)
+    else
+      d =  a / b
+    end if
+  end if
+end function fdiv
+
+
+! calcula a raiz de uma equacao linear
+pure function calc_root_of_linear(c1, c0) result(ret)
+  real, intent(in) :: c1, c0
+  type(retval) :: ret
+  if (-epsilon(c1) < c1 .AND. c1 < epsilon(c1)) then
+    ret%num_val = 0
+    ret%value(1) = 0.0
+  else
+    ret%num_val = 1
+    ret%value(1) = fdiv(-c0,c1)
+  end if
+end function calc_root_of_linear
+
 
 END MODULE raymath

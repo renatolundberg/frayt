@@ -201,9 +201,9 @@ PURE FUNCTION find_intersection_sphere(f, r)
   oc = f%sphere%c - r%source
   l2oc = oc.DOT.oc
   tca = oc.DOT.r%direction !TODO: garantir que o vetor direction e' unitario
+  l2hc = ( f%sphere%r2 - l2oc ) + ( tca * tca )
 
   IF ( l2oc < f%sphere%r2 ) THEN ! o raio e' gerado dentro da esfera
-    l2hc = ( f%sphere%r2 - l2oc ) + ( tca * tca )
     find_intersection_sphere%intersects = .TRUE.
     find_intersection_sphere%point = r%source + ( r%direction * ( tca + SQRT(l2hc) ))
     RETURN
@@ -214,7 +214,6 @@ PURE FUNCTION find_intersection_sphere(f, r)
     RETURN
   END IF
 
-  l2hc = ( f%sphere%r2 - l2oc ) + ( tca * tca )
   IF (l2hc > 0 ) THEN ! TODO: verificar limites de erros numericos
     find_intersection_sphere%intersects = .TRUE.
     find_intersection_sphere%point = r%source + ( r%direction * ( tca + SQRT(l2hc) ))
