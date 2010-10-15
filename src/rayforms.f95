@@ -43,7 +43,6 @@ MODULE rayforms
   INTEGER, PARAMETER :: TP_SPHERE = 1
   INTEGER, PARAMETER :: TP_CYLINDER = 2
   INTEGER, PARAMETER :: TP_CONE = 3
-  REAL, PARAMETER    :: SMALL_NUM = 0.0000001
 
   TYPE geom_form
     INTEGER tp
@@ -65,10 +64,10 @@ PURE FUNCTION create_triangle(a, u, v)
   create_triangle%triangle%a = a
   create_triangle%triangle%u = u
   create_triangle%triangle%v = v
-  create_triangle%triangle%n = vector_cross_product(v, u)
-  create_triangle%triangle%uu = vector_dot_product(u, u)
-  create_triangle%triangle%uv = vector_dot_product(u, v)
-  create_triangle%triangle%vv = vector_dot_product(v, v)
+  create_triangle%triangle%n =v .CROSS. u
+  create_triangle%triangle%uu = u .DOT. u
+  create_triangle%triangle%uv = u .DOT. v
+  create_triangle%triangle%vv = v .DOT. v
   RETURN
 END FUNCTION create_triangle
 
@@ -127,7 +126,7 @@ PURE FUNCTION find_intersection_triangle(f, r)
   a = -vector_dot_product(w0, n)
   b = vector_dot_product(dir, n)
 
-  IF (ABS(b) < SMALL_NUM) THEN     ! raio é paralelo ao plano
+  IF (is_zero(b)) THEN     ! raio é paralelo ao plano
     find_intersection_triangle%intersects = .FALSE.
     find_intersection_triangle%point = ZERO_VECTOR
     RETURN

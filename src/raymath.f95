@@ -127,10 +127,11 @@ end function fdiv
 
 
 ! verifica se o numero e' menor do que +- epsilon
+! TODO: verificar se não é melhor usar tiny()
 pure function is_zero(a) result(b)
   real, intent(in) :: a
   logical :: b
-  b = -epsilon(a) < a .AND. a < epsilon(a)
+  b = abs(a) < epsilon(a)
 end function is_zero
 
 
