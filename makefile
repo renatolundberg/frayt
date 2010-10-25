@@ -14,7 +14,7 @@ raytracer: bin/raytracer.o ${MODULES}
 tests: raytracer bin/raymath_test bin/rayforms_test
 	bin/raymath_test
 	bin/rayforms_test
-	./raytracer doc/entrada1.txt pov.txt saida.txt 800 600 0.1 10
+	./raytracer doc/entrada1.txt pov.txt imagem.ppm 800 600 0.1 10
 
 bin/%_test: bin/%_test.o ${MODULES}
 	${FC} ${FCFLAGS} -o $@ $^
@@ -38,6 +38,6 @@ clean:
 	rm -rf bin/* raytracer
 
 edit:
-	editor -p ${SRCFILES} makefile
+	editor -p ${SRCFILES} imagem.ppm makefile
 
 .PHONY: all tests clean edit

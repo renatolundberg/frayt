@@ -6,7 +6,8 @@ PROGRAM raytracer
 
   ! variaveis auxiliares
   CHARACTER(50) :: buffer
-  INTEGER :: i, j, color, nobj
+  INTEGER :: i, j, nobj
+  INTEGER, DIMENSION(3) :: color
   TYPE(RAY) :: r
   TYPE(VECTOR) :: pov
   TYPE(VECTOR) :: pixel
@@ -26,16 +27,27 @@ PROGRAM raytracer
   !CALL list_objects
   CALL read_povfile
 
+  ! abre a imagem e escreve o cabecalho PPM:
+  !   P3 - Portable Pixmap em ASCII
+  open (unit = 2, file = imgfile)
+  write (2,'(A2)') 'P3'
+  write (2,*) imgwidth, ' ', imgheight
+  write (2,*) '255'
+
   ! loop principal
   DO i = 1,imgheight
     DO j = 1,imgwidth
       r = RAY(pov, pixel - pov)
       color = raytrace(r, 0)
-      ! plot color
+      write (2,'(I3,A,I3,A,I3,A)',advance='no') int(cos(2*3.1415*i*j)*126+126), ' ', &
+                                                int(cos(2*3.1415*(imgheight-i)*(imgwidth-j))*126+126), ' ', &
+                                                int(cos(2*3.1415*(i+30)*(j+50))*126+126), ' '
+      IF (j == imgwidth) write (2,*)
     END DO
   END DO
 
-  CALL write_imgfile
+  ! fecha o arquivo de imagem
+  close(2)
 
 CONTAINS
 
@@ -60,8 +72,9 @@ END SUBROUTINE read_commandline_args
 FUNCTION raytrace(r, depth) RESULT (color)
   TYPE(RAY), INTENT(IN) :: r
   INTEGER, INTENT(IN) :: depth
-  INTEGER :: color
-  color = 0 + depth + r%source%v(1) ! so pra nao dar warning
+  INTEGER, DIMENSION(3) :: color
+  color = (/0,0,0/)
+  color = r%source%v(1) + depth
 END FUNCTION
 
 
