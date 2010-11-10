@@ -6,12 +6,9 @@ MODULE rayforms
   TYPE ray
     TYPE(vector) source
     TYPE(vector) direction
+    TYPE(vector) filter
+    INTEGER depth
   END TYPE ray
-
-  TYPE intersection
-    LOGICAL intersects
-    TYPE(vector) point
-  END TYPE
 
   !Triângulo
   TYPE triangle
@@ -27,32 +24,23 @@ MODULE rayforms
      REAL r, r2       !raio e raio ao quadrado
   END TYPE sphere
 
-  !Cilindro
-  TYPE cylinder
-     TYPE(vector) s, i   !pontos, centros da face superior e inferior
-     REAL r              !raio
-  END TYPE cylinder
-  
-  !Cone
-  TYPE cone
-     TYPE(vector) s, i    !pontos, centros da face superior e inferior
-     REAL rs, ri          !raios do cone na face superior e inferior
-  END TYPE cone
-
   INTEGER, PARAMETER :: TP_TRIANGLE = 0
   INTEGER, PARAMETER :: TP_SPHERE = 1
-  INTEGER, PARAMETER :: TP_CYLINDER = 2
-  INTEGER, PARAMETER :: TP_CONE = 3
 
   TYPE geom_form
     INTEGER tp
     TYPE(triangle) :: triangle
     TYPE(sphere)   :: sphere
-    TYPE(cylinder) :: cylinder
-    TYPE(cone)     :: cone
-    REAL, DIMENSION(3) :: luminosity, reflection, transparency
+    TYPE(vector) :: luminosity, reflection, transparency
     REAL :: refraction
   END TYPE geom_form
+
+  TYPE intersection
+    LOGICAL intersects
+    TYPE(geom_form) form
+    TYPE(vector) point
+    TYPE(vector) normal
+  END TYPE
 CONTAINS
 
 
@@ -64,26 +52,24 @@ PURE FUNCTION create_triangle(a, u, v)
   create_triangle%triangle%a = a
   create_triangle%triangle%u = u
   create_triangle%triangle%v = v
-  create_triangle%triangle%n =v .CROSS. u
+  create_triangle%triangle%n = v .CROSS. u
   create_triangle%triangle%uu = u .DOT. u
   create_triangle%triangle%uv = u .DOT. v
   create_triangle%triangle%vv = v .DOT. v
   RETURN
 END FUNCTION create_triangle
 
-
 ! constroi uma esfera
-!PURE FUNCTION create_sphere(c, r)
-!  TYPE(vector), INTENT(IN) :: c
-!  REAL, INTENT(IN) :: r
-!  TYPE(geom_form) :: create_sphere
-!  create_sphere%tp = TP_SPHERE
-!  create_sphere%sphere%c = c
-!  create_sphere%sphere%r = r
-!  create_sphere%sphere%r2 = r * r
-!  RETURN
-!END FUNCTION create_sphere
-
+PURE FUNCTION create_sphere(radius, center)
+  TYPE(vector), INTENT(IN) :: center
+  REAL, INTENT(IN) :: radius
+  TYPE(geom_form) create_sphere
+  create_sphere%tp = TP_SPHERE
+  create_sphere%sphere%c = center
+  create_sphere%sphere%r = radius
+  create_sphere%sphere%r2 = radius * radius
+  RETURN
+END FUNCTION create_sphere
 
 ! encontra a interseccao de um raio com uma forma geometrica
 PURE FUNCTION find_intersection(f, r) 
@@ -95,10 +81,6 @@ PURE FUNCTION find_intersection(f, r)
       find_intersection = find_intersection_triangle(f, r)
     CASE (TP_SPHERE)
       find_intersection = find_intersection_sphere(f, r)
-!    CASE (TP_CYLINDER)
-!      find_intersection = find_intersection_cylinder(f, r)
-!    CASE (TP_CONE)
-!      find_intersection = find_intersection_cone(f, r)
   END SELECT
 END FUNCTION find_intersection
 
@@ -164,6 +146,9 @@ PURE FUNCTION find_intersection_triangle(f, r)
   END IF
   find_intersection_triangle%intersects = .TRUE.
   find_intersection_triangle%point = vector_sum(vector_sum(vector_real_product(v, t), vector_real_product(u, s)), f%triangle%a)
+!TODO a normal muda de acordo com o lado em que ocorre a colisão?
+  find_intersection_triangle%normal = f%triangle%n
+  find_intersection_triangle%form = f
   RETURN
 END FUNCTION find_intersection_triangle
 
@@ -222,18 +207,5 @@ PURE FUNCTION find_intersection_sphere(f, r)
   find_intersection_sphere%intersects = .FALSE.
   RETURN
 END FUNCTION find_intersection_sphere
-
-
-!PURE FUNCTION find_intersection_cylinder(f, r)
-!  TYPE(geom_form), INTENT(IN) :: f
-!  TYPE(ray), INTENT(IN) :: r
-!  TYPE(intersection) find_intersection_cylinder
-!END FUNCTION find_intersection_cylinder
-
-!PURE FUNCTION find_intersection_cone(f, r)
-!  TYPE(geom_form), INTENT(IN) :: f
-!  TYPE(ray), INTENT(IN) :: r
-!  TYPE(intersection) find_intersection_cone
-!END FUNCTION find_intersection_cone
 
 END MODULE rayforms

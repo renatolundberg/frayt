@@ -7,9 +7,9 @@ PROGRAM raytracer
   ! variaveis auxiliares
   CHARACTER(50) :: buffer
   INTEGER :: i, j, nobj
-  INTEGER, DIMENSION(3) :: color
+  TYPE(vector) :: color
   TYPE(RAY) :: r
-  TYPE(VECTOR) :: pov
+  TYPE(VECTOR) :: pov, pid, pie, psd, pse
   TYPE(VECTOR) :: pixel
   TYPE(GEOM_FORM), DIMENSION(100) :: objects
 
@@ -37,11 +37,15 @@ PROGRAM raytracer
   ! loop principal
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      r = RAY(pov, pixel - pov)
-      color = raytrace(r, 0)
-      write (2,'(I3,A,I3,A,I3,A)',advance='no') int(cos(2*3.1415*i*j)*126+126), ' ', &
-                                                int(cos(2*3.1415*(imgheight-i)*(imgwidth-j))*126+126), ' ', &
-                                                int(cos(2*3.1415*(i+30)*(j+50))*126+126), ' '
+      pixel = (pse - pie) * (real(i)/imgheight) + (pid - pie) * (real(j)/imgwidth) + pie - pov
+      r = RAY(pov, pixel, ONE_VECTOR, 0)
+      color = raytrace(r)
+      write (2,'(I3,A,I3,A,I3,A)',advance='no') int(color%v(1) * 255), ' ', &
+                                                int(color%v(2) * 255), ' ', &
+                                                int(color%v(3) * 255), ' '
+!     write (2,'(I3,A,I3,A,I3,A)',advance='no') int(cos(2*3.1415*i*j)*126+126), ' ', &
+!                                               int(cos(2*3.1415*(imgheight-i)*(imgwidth-j))*126+126), ' ', &
+!                                               int(cos(2*3.1415*(i+30)*(j+50))*126+126), ' '
       IF (j == imgwidth) write (2,*)
     END DO
   END DO
@@ -51,6 +55,90 @@ PROGRAM raytracer
 
 CONTAINS
 
+PURE FUNCTION find_ray_intersection(r) RESULT (inter)
+  TYPE(RAY), INTENT(IN) :: r
+  TYPE(intersection) :: inter, ninter
+  TYPE(vector) :: v
+  TYPE(geom_form) :: f
+  INTEGER :: i
+  REAL :: inter_dist, ninter_dist
+! calculo da interseccao
+  inter%intersects = .FALSE.
+  DO i = 1,nobj
+    ninter = find_intersection(objects(i), r) 
+    IF (ninter%intersects) THEN
+      v = ninter%point - r%source
+      ninter_dist = vector_dot_product(v, v)
+      IF (.NOT. inter%intersects) THEN
+        inter = ninter
+        inter_dist = ninter_dist
+        f = objects(i)
+      ELSE IF (ninter_dist < inter_dist) THEN
+        inter = ninter
+        inter_dist = ninter_dist
+        f = objects(i)
+      END IF
+    END IF
+  END DO
+END FUNCTION
+
+PURE FUNCTION luminosity_color(r, inter) RESULT (color)
+  TYPE(RAY), INTENT(IN) :: r
+  TYPE(intersection), INTENT(IN) :: inter
+  REAL :: cosine
+  TYPE(vector) :: color
+  cosine = r%direction .DOT. inter%normal
+  color = inter%form%luminosity * cosine
+  color%v(1) = max(0., color%v(1))
+  color%v(2) = max(0., color%v(2))
+  color%v(3) = max(0., color%v(3))
+END FUNCTION
+
+PURE FUNCTION reflection_color(r, inter) RESULT (color)
+  TYPE(RAY), INTENT(IN) :: r
+  TYPE(intersection), INTENT(IN) :: inter
+  TYPE(RAY) :: refl
+  TYPE(vector) :: color
+  REAL p
+  p = vector_dot_product(inter%normal, r%direction) * 2
+  refl%direction = r%direction - inter%normal * p
+  refl%source = inter%point
+  refl%depth = r%depth + 1
+  refl%filter = r%filter * inter%form%reflection
+  color = raytrace(refl)
+END FUNCTION
+
+PURE FUNCTION refraction_color(r, inter) RESULT (color)
+  TYPE(RAY), INTENT(IN) :: r
+  TYPE(intersection), INTENT(IN) :: inter
+  TYPE(RAY) :: refr
+  TYPE(vector) :: color
+! TODO calcular o efeito da refracao!!!!!
+  refr%direction = r%direction
+  refr%source = inter%point
+  refr%depth = r%depth + 1
+  refr%filter = r%filter * inter%form%transparency
+  color = raytrace(refr)
+END FUNCTION
+
+PURE FUNCTION raytrace(r) RESULT (color)
+  TYPE(RAY), INTENT(IN) :: r
+  TYPE(vector) :: color, lum, refl, refr
+  TYPE(intersection) :: inter
+  IF (r%depth > maxgen) THEN
+    color = ZERO_VECTOR
+  ELSE
+    inter = find_ray_intersection(r)
+    IF (inter%intersects) THEN
+      lum = luminosity_color(r, inter)
+      refl = reflection_color(r, inter)
+      refr = refraction_color(r, inter)
+      color = lum + refl + refr
+    ELSE
+      color = ZERO_VECTOR
+    END IF
+  END IF
+END FUNCTION
 
 ! le os argumentos da linha de comando
 SUBROUTINE read_commandline_args
@@ -67,22 +155,28 @@ SUBROUTINE read_commandline_args
   READ(buffer, *) maxgen
 END SUBROUTINE read_commandline_args
 
-
-! programa principal de tracing de um raio
-FUNCTION raytrace(r, depth) RESULT (color)
-  TYPE(RAY), INTENT(IN) :: r
-  INTEGER, INTENT(IN) :: depth
-  INTEGER, DIMENSION(3) :: color
-  color = (/0,0,0/)
-  color = r%source%v(1) + depth
-END FUNCTION
-
+! le o arquivo com informacoes sobre ponto de vista e janela
+SUBROUTINE read_povfile
+  REAL x, y, z
+  OPEN (unit = 1, file = povfile)
+  READ (1,*) x,y,z
+  pov = vector((/x,y,z,0./))
+  READ (1,*) x,y,z
+  pie = vector((/x,y,z,0./))
+  READ (1,*) x,y,z
+  pse = vector((/x,y,z,0./))
+  READ (1,*) x,y,z
+  psd = vector((/x,y,z,0./))
+  READ (1,*) x,y,z
+  pid = vector((/x,y,z,0./))
+  CLOSE (1)
+END SUBROUTINE
 
 ! le o arquivo de entrada com a descricao do mundo
 SUBROUTINE read_worldfile
-  TYPE(vector) :: a, u, v
+  TYPE(vector) :: a, u, v, luminosity, reflection, transparency
   INTEGER :: ios = 0, formtype, i = 0
-  REAL x, y, z
+  REAL x, y, z, r, refraction
   OPEN (unit = 1, file = worldfile)
   objread: DO
     i = i+1
@@ -91,41 +185,38 @@ SUBROUTINE read_worldfile
     IF (ios < 0) EXIT objread ! interrompe a leitura caso encontre EOF
     objects(i)%tp = formtype
     READ (1,*) x,y,z
-    objects(i)%luminosity = (/x,y,z/)
+    luminosity = vector((/x,y,z,0./))
     READ (1,*) x,y,z
-    objects(i)%reflection = (/x,y,z/)
+    reflection = vector((/x,y,z,0./))
     READ (1,*) x,y,z
-    objects(i)%transparency = (/x,y,z/)
-    READ (1, *) objects(i)%refraction
+    transparency = vector((/x,y,z,0./))
+    READ (1, *) refraction
     ! le os dados especificos de cada forma
     SELECT CASE (formtype)
       CASE (0) ! triangulo
         READ (1,*) x,y,z
-        a = vector((/x,y,z/))
+        a = vector((/x,y,z,0./))
         READ (1,*) x,y,z
-        u = vector((/x,y,z/))
+        u = vector((/x,y,z,0./))
         READ (1,*) x,y,z
-        v = vector((/x,y,z/))
-        objects(i) = create_triangle(a,u,v)
+        v = vector((/x,y,z,0./))
+        objects(i) = create_triangle(a, u, v)
       CASE (1) ! esfera
-        READ (1,*) objects(i)%sphere%r, x,y,z
-        objects(i)%sphere%c = vector((/x,y,z/))
-      CASE (2) ! cilindro
-        READ (1,*) x,y,z
-        objects(i)%cylinder%s = vector((/x,y,z/))
-        READ (1,*) x,y,z
-        objects(i)%cylinder%i = vector((/x,y,z/))
-        READ (1,*) objects(i)%cylinder%r
-      CASE (3) ! cone
-        READ (1,*) x,y,z
-        objects(i)%cone%s = vector((/x,y,z/))
-        READ (1,*) x,y,z
-        objects(i)%cone%i = vector((/x,y,z/))
-        READ (1,*) objects(i)%cone%rs, objects(i)%cone%ri
+        READ (1,*) r, x,y,z
+        a = vector((/x,y,z,0./))
+        !objects(i) = create_sphere(r, a)
+        objects(i)%tp = TP_SPHERE
+        objects(i)%sphere%c = a
+        objects(i)%sphere%r = r
+        objects(i)%sphere%r2 = r * r
       CASE DEFAULT
         PRINT *, 'Form type "',formtype,'" not recognized.'
         CALL EXIT(1)
     END SELECT
+    objects(i)%luminosity = luminosity
+    objects(i)%reflection = reflection
+    objects(i)%transparency = transparency
+    objects(i)%refraction = refraction
   END DO objread
   CLOSE (1)
   nobj = i-1
@@ -135,9 +226,9 @@ SUBROUTINE list_objects
   INTEGER :: i
   DO i = 1,nobj
     PRINT *, 'OBJ ', i
-    PRINT *, '  luminosity: ', objects(i)%luminosity(1), objects(i)%luminosity(2), objects(i)%luminosity(3)
-    PRINT *, '  reflection: ', objects(i)%reflection(1), objects(i)%reflection(2), objects(i)%reflection(3)
-    PRINT *, '  transparency: ', objects(i)%transparency(1), objects(i)%transparency(2), objects(i)%transparency(3)
+    PRINT *, '  luminosity: ', objects(i)%luminosity%v(1), objects(i)%luminosity%v(2), objects(i)%luminosity%v(3)
+    PRINT *, '  reflection: ', objects(i)%reflection%v(1), objects(i)%reflection%v(2), objects(i)%reflection%v(3)
+    PRINT *, '  transparency: ', objects(i)%transparency%v(1), objects(i)%transparency%v(2), objects(i)%transparency%v(3)
     PRINT *, '  refraction: ', objects(i)%refraction
     SELECT CASE (objects(i)%tp)
       CASE (0) ! triangulo
@@ -147,27 +238,9 @@ SUBROUTINE list_objects
       CASE (1) ! esfera
         PRINT *, '  r: ', objects(i)%sphere%r
         PRINT *, '  c: ', objects(i)%sphere%c
-!      CASE (2) ! cilindro
-!        READ (1,*) x,y,z
-!        objects(i)%cylinder%s = vector((/x,y,z/))
-!        READ (1,*) x,y,z
-!        objects(i)%cylinder%i = vector((/x,y,z/))
-!        READ (1,*) objects(i)%cylinder%r
-!      CASE (3) ! cone
-!        READ (1,*) x,y,z
-!        objects(i)%cone%s = vector((/x,y,z/))
-!        READ (1,*) x,y,z
-!        objects(i)%cone%i = vector((/x,y,z/))
-!        READ (1,*) objects(i)%cone%rs, objects(i)%cone%ri
     END SELECT
   END DO
 END SUBROUTINE
-
-! le o arquivo com informacoes sobre ponto de vista e janela
-SUBROUTINE read_povfile
-
-END SUBROUTINE
-
 
 ! escreve a imagem no arquivo de saida
 SUBROUTINE write_imgfile

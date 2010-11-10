@@ -18,7 +18,9 @@ MODULE raymath
   END TYPE retval
 
   ! o zero
-  TYPE(vector), PARAMETER :: ZERO_VECTOR = vector( (/0,0,0/) ) 
+  TYPE(vector), PARAMETER :: ZERO_VECTOR = vector( (/0,0,0,0/) )
+  ! o um
+  TYPE(vector), PARAMETER :: ONE_VECTOR = vector( (/1,1,1,1/) )
 
   ! definicoes de operadores
   INTERFACE OPERATOR(-)
@@ -27,6 +29,10 @@ MODULE raymath
 
   INTERFACE OPERATOR(+)
     MODULE PROCEDURE vector_sum
+  END INTERFACE
+
+  INTERFACE OPERATOR(*)
+    MODULE PROCEDURE vector_multiply
   END INTERFACE
 
   INTERFACE OPERATOR(.DOT.)
@@ -48,7 +54,7 @@ PURE FUNCTION pos_vector_transf(m, v)
   TYPE(vector), INTENT (IN)  :: v
   TYPE(matrix), INTENT (IN)  :: m
   TYPE(vector) pos_vector_transf
-  pos_vector_transf%v = MATMUL(m%mat, v%v) + m%mat(1:3,4)
+  pos_vector_transf%v = MATMUL(m%mat, v%v) + m%mat(1:4,4)
   RETURN
 END FUNCTION pos_vector_transf
 
@@ -63,10 +69,9 @@ END FUNCTION dir_vector_transf
 
 ! subtracao de dois vetores
 PURE FUNCTION vector_subtract(v1, v2)
-  TYPE(vector), INTENT (IN)  :: v1, v2
+  TYPE(vector), INTENT (IN) :: v1, v2
   TYPE(vector) vector_subtract
   vector_subtract%v = v1%v - v2%v
-  RETURN
 END FUNCTION vector_subtract
 
 ! adicao de dois vetores
@@ -76,6 +81,14 @@ PURE FUNCTION vector_sum(v1, v2)
   vector_sum%v = v1%v + v2%v
   RETURN
 END FUNCTION vector_sum
+
+! adicao de dois vetores
+PURE FUNCTION vector_multiply(v1, v2)
+  TYPE(vector), INTENT (IN)  :: v1, v2
+  TYPE(vector) vector_multiply
+  vector_multiply%v = v1%v * v2%v
+  RETURN
+END FUNCTION vector_multiply
 
 ! produto interno de dois vetores
 PURE FUNCTION vector_dot_product(v1, v2)
@@ -101,6 +114,7 @@ PURE FUNCTION vector_cross_product(v1, v2)
   vector_cross_product%v(1) = v1%v(2) * v2%v(3) - v1%v(3) * v2%v(2)
   vector_cross_product%v(2) = v1%v(3) * v2%v(1) - v1%v(1) * v2%v(3)
   vector_cross_product%v(3) = v1%v(1) * v2%v(2) - v1%v(2) * v2%v(1)
+  vector_cross_product%v(4) = 0
   RETURN
 END FUNCTION vector_cross_product
 
