@@ -30,7 +30,7 @@ SUBROUTINE test_create_triangle(res)
   REAL                :: euu, euv, evv
   TYPE(geom_form)     :: r
   LOGICAL             :: failure
-  en = vector_cross_product(v, u)
+  en = vector_to_unit(vector_cross_product(v, u))
   euu = vector_dot_product(u, u)
   euv = vector_dot_product(u, v)
   evv = vector_dot_product(v, v)
@@ -64,7 +64,7 @@ SUBROUTINE test_intersection_triangle_center(res)
   TYPE(vector)        :: a =  vector((/ 0,-1, 1/))
   TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
   TYPE(vector)        :: v =  vector((/-1, 2, 0/))
-  TYPE(vector)        :: en = vector((/ 0, 0,-4/))
+  TYPE(vector)        :: en = vector((/ 0, 0,-1/))
   TYPE(vector)        :: ei = vector((/ 0, 0, 1/))
   TYPE(ray)           :: r = ray(vector((/0,0,0/)), vector((/0,0,1/)), ONE_VECTOR, 0)
   LOGICAL             :: failure

@@ -14,7 +14,8 @@ raytracer: bin/raytracer.o ${MODULES}
 tests: raytracer bin/raymath_test bin/rayforms_test
 	bin/raymath_test
 	bin/rayforms_test
-	./raytracer doc/entrada2.txt pov.txt imagem.ppm 800 600 0.1 10
+	./raytracer doc/entrada2.txt pov.txt imagem2.ppm 800 600 0.1 10
+	./raytracer doc/entrada3.txt pov.txt imagem3.ppm 800 600 0.1 10
 
 bin/%_test: bin/%_test.o ${MODULES}
 	${FC} ${FCFLAGS} -o $@ $^

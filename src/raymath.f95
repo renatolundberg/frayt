@@ -82,7 +82,7 @@ PURE FUNCTION vector_sum(v1, v2)
   RETURN
 END FUNCTION vector_sum
 
-! adicao de dois vetores
+! multiplicação de dois vetores
 PURE FUNCTION vector_multiply(v1, v2)
   TYPE(vector), INTENT (IN)  :: v1, v2
   TYPE(vector) vector_multiply
@@ -117,6 +117,14 @@ PURE FUNCTION vector_cross_product(v1, v2)
   vector_cross_product%v(4) = 0
   RETURN
 END FUNCTION vector_cross_product
+
+PURE FUNCTION vector_to_unit(v) RESULT (u)
+  TYPE(vector), INTENT (IN)  :: v
+  TYPE(vector) :: u
+  REAL :: l
+  l =  1. / sqrt(v .DOT. v)
+  u = v * l
+END FUNCTION
 
 ! baseado em: http://fuzzyphoton.tripod.com/howtowrt.htm#step1
 pure function fdiv(a, b) result (d)

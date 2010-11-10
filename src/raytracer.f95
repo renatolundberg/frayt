@@ -21,10 +21,11 @@ PROGRAM raytracer
   INTEGER :: imgheight ! altura da imagem (0 mantem proporcao)
   REAL :: threshold ! limiar de visao
   INTEGER :: maxgen ! numero maximo de geracoes de um raio
+  INTEGER :: red, green, blue
 
   CALL read_commandline_args
   CALL read_worldfile
-  !CALL list_objects
+  CALL list_objects
   CALL read_povfile
 
   ! abre a imagem e escreve o cabecalho PPM:
@@ -37,12 +38,15 @@ PROGRAM raytracer
   ! loop principal
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      pixel = (pse - pie) * (real(i)/imgheight) + (pid - pie) * (real(j)/imgwidth) + pie - pov
+      pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
       r = RAY(pov, pixel, ONE_VECTOR, 0)
       color = raytrace(r)
-      write (2,'(I3,A,I3,A,I3,A)',advance='no') int(color%v(1) * 255), ' ', &
-                                                int(color%v(2) * 255), ' ', &
-                                                int(color%v(3) * 255), ' '
+      red = int(color%v(1) * 255.)
+      green = int(color%v(2) * 255.)
+      blue = int(color%v(3) * 255.)
+      write (2,'(I3,A,I3,A,I3,A)',advance='no') red, ' ', &
+                                                green, ' ', &
+                                                blue, ' '
 !     write (2,'(I3,A,I3,A,I3,A)',advance='no') int(cos(2*3.1415*i*j)*126+126), ' ', &
 !                                               int(cos(2*3.1415*(imgheight-i)*(imgwidth-j))*126+126), ' ', &
 !                                               int(cos(2*3.1415*(i+30)*(j+50))*126+126), ' '
@@ -87,7 +91,7 @@ PURE FUNCTION luminosity_color(r, inter) RESULT (color)
   TYPE(intersection), INTENT(IN) :: inter
   REAL :: cosine
   TYPE(vector) :: color
-  cosine = r%direction .DOT. inter%normal
+  cosine = - (r%direction .DOT. inter%normal)
   color = inter%form%luminosity * cosine
   color%v(1) = max(0., color%v(1))
   color%v(2) = max(0., color%v(2))
@@ -101,7 +105,7 @@ PURE FUNCTION reflection_color(r, inter) RESULT (color)
   TYPE(vector) :: color
   REAL p
   p = vector_dot_product(inter%normal, r%direction) * 2
-  refl%direction = r%direction - inter%normal * p
+  refl%direction = vector_to_unit(r%direction - inter%normal * p)
   refl%source = inter%point
   refl%depth = r%depth + 1
   refl%filter = r%filter * inter%form%reflection
@@ -133,7 +137,7 @@ PURE FUNCTION raytrace(r) RESULT (color)
       lum = luminosity_color(r, inter)
       refl = reflection_color(r, inter)
       refr = refraction_color(r, inter)
-      color = lum + refl + refr
+      color = r%filter * (lum + refl + refr)
     ELSE
       color = ZERO_VECTOR
     END IF
@@ -174,7 +178,7 @@ END SUBROUTINE
 
 ! le o arquivo de entrada com a descricao do mundo
 SUBROUTINE read_worldfile
-  TYPE(vector) :: a, u, v, luminosity, reflection, transparency
+  TYPE(vector) :: a, b, c, luminosity, reflection, transparency
   INTEGER :: ios = 0, formtype, i = 0
   REAL x, y, z, r, refraction
   OPEN (unit = 1, file = worldfile)
@@ -197,18 +201,13 @@ SUBROUTINE read_worldfile
         READ (1,*) x,y,z
         a = vector((/x,y,z,0./))
         READ (1,*) x,y,z
-        u = vector((/x,y,z,0./))
+        b = vector((/x,y,z,0./))
         READ (1,*) x,y,z
-        v = vector((/x,y,z,0./))
-        objects(i) = create_triangle(a, u, v)
+        c = vector((/x,y,z,0./))
+        objects(i) = create_triangle(b, c - b, a - b)
       CASE (1) ! esfera
         READ (1,*) r, x,y,z
-        a = vector((/x,y,z,0./))
-        !objects(i) = create_sphere(r, a)
-        objects(i)%tp = TP_SPHERE
-        objects(i)%sphere%c = a
-        objects(i)%sphere%r = r
-        objects(i)%sphere%r2 = r * r
+        objects(i) = create_sphere(r, vector((/x,y,z,0./)))
       CASE DEFAULT
         PRINT *, 'Form type "',formtype,'" not recognized.'
         CALL EXIT(1)

@@ -52,7 +52,7 @@ PURE FUNCTION create_triangle(a, u, v)
   create_triangle%triangle%a = a
   create_triangle%triangle%u = u
   create_triangle%triangle%v = v
-  create_triangle%triangle%n = v .CROSS. u
+  create_triangle%triangle%n = vector_to_unit(v .CROSS. u)
   create_triangle%triangle%uu = u .DOT. u
   create_triangle%triangle%uv = u .DOT. v
   create_triangle%triangle%vv = v .DOT. v
@@ -99,7 +99,7 @@ PURE FUNCTION find_intersection_triangle(f, r)
   TYPE(ray), INTENT(IN) :: r
   TYPE(intersection) find_intersection_triangle
   REAL :: dd, a, b, uu, uv, vv, wu, wv, D, s, t
-  TYPE(vector) :: v, u, n, dir, w0, w, I
+  TYPE(vector) :: v, u, n, dir, w0, w, I, dist
   u = f%triangle%u
   v = f%triangle%v
   n = f%triangle%n
@@ -124,6 +124,13 @@ PURE FUNCTION find_intersection_triangle(f, r)
 
   I = vector_sum(r%source, vector_real_product(dir, dd)) !ponto de interseccao do ponto com o plano
 
+  dist = I - r%source
+  IF (is_zero(dist .DOT. dist)) THEN
+    find_intersection_triangle%intersects = .FALSE.
+    find_intersection_triangle%point = ZERO_VECTOR
+    RETURN
+  END IF
+
   uu = f%triangle%uu
   uv = f%triangle%uv
   vv = f%triangle%vv
@@ -145,8 +152,7 @@ PURE FUNCTION find_intersection_triangle(f, r)
     RETURN
   END IF
   find_intersection_triangle%intersects = .TRUE.
-  find_intersection_triangle%point = vector_sum(vector_sum(vector_real_product(v, t), vector_real_product(u, s)), f%triangle%a)
-!TODO a normal muda de acordo com o lado em que ocorre a colisão?
+  find_intersection_triangle%point = I
   find_intersection_triangle%normal = f%triangle%n
   find_intersection_triangle%form = f
   RETURN
