@@ -11,7 +11,7 @@ PROGRAM raytracer
   TYPE(RAY) :: r
   TYPE(VECTOR) :: pov, pid, pie, psd, pse
   TYPE(VECTOR) :: pixel
-  TYPE(GEOM_FORM), DIMENSION(100) :: objects
+  TYPE(GEOM_FORM), ALLOCATABLE :: objects(:)
 
   ! argumentos da linha de comando
   CHARACTER(50) :: worldfile! arquivo de especificacao do mundo
@@ -182,6 +182,8 @@ SUBROUTINE read_worldfile
   INTEGER :: ios = 0, formtype, i = 0
   REAL x, y, z, r, refraction
   OPEN (unit = 1, file = worldfile)
+  READ (1,*) nobj
+  ALLOCATE (objects(nobj))
   objread: DO
     i = i+1
     ! faz a leitura dos dados genericos para uma forma qualquer
@@ -218,7 +220,6 @@ SUBROUTINE read_worldfile
     objects(i)%refraction = refraction
   END DO objread
   CLOSE (1)
-  nobj = i-1
 END SUBROUTINE
 
 SUBROUTINE list_objects
