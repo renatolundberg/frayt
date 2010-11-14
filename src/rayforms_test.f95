@@ -12,6 +12,9 @@ PROGRAM rayforms_test
   CALL test_intersection_triangle_edge(res)
   CALL test_intersection_triangle_vertex(res)
   CALL test_intersection_triangle_miss(res)
+  CALL test_intersection_sphere_center_outside(res)
+  CALL test_intersection_sphere_uncentered_outside(res)
+  CALL test_intersection_sphere_center_inner(res)
 
   PRINT *, "Teste do modulo rayforms finalizado. Ocorreram ", res%failures, " falhas em ", res%assertions, " verificacoes."
   IF (res%failures > 0) THEN
@@ -64,8 +67,8 @@ SUBROUTINE test_intersection_triangle_center(res)
   TYPE(vector)        :: a =  vector((/ 0,-1, 1/))
   TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
   TYPE(vector)        :: v =  vector((/-1, 2, 0/))
-  TYPE(vector)        :: en = vector((/ 0, 0,-1/))
   TYPE(vector)        :: ei = vector((/ 0, 0, 1/))
+  TYPE(vector)        :: en = vector((/ 0, 0,-1/))
   TYPE(ray)           :: r = ray(vector((/0,0,0/)), vector((/0,0,1/)), ONE_VECTOR, 0)
   LOGICAL             :: failure
   f = create_triangle(a, u, v)
@@ -73,7 +76,7 @@ SUBROUTINE test_intersection_triangle_center(res)
   IF (failure) THEN
     PRINT *, "create_triangle gerou normal errada. Esperado", en, " mas encontrado ", f%triangle%n
   END IF
-  CALL check_intersection_success(res, "intersection_triangle_center", f, r, ei)
+  CALL check_intersection_success(res, "intersection_triangle_center", f, r, ei, en)
 END SUBROUTINE test_intersection_triangle_center
 
 SUBROUTINE test_intersection_triangle_not_centered(res)
@@ -83,9 +86,10 @@ SUBROUTINE test_intersection_triangle_not_centered(res)
   TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
   TYPE(vector)        :: v =  vector((/-1, 2, 0/))
   TYPE(vector)        :: ei = vector((/ 0.0, 0.0, 1.1/))
+  TYPE(vector)        :: en = vector((/ 0, 0, -1/))
   TYPE(ray)           :: r = ray(vector((/0.0,0.0,0.0/)), vector((/0.0,0.0,1.0/)), ONE_VECTOR, 0)
   f = create_triangle(a, u, v)
-  CALL check_intersection_success(res, "intersection_triangle_not_centered", f, r, ei)
+  CALL check_intersection_success(res, "intersection_triangle_not_centered", f, r, ei, en)
 END SUBROUTINE test_intersection_triangle_not_centered
 
 SUBROUTINE test_intersection_triangle_edge(res)
@@ -95,9 +99,10 @@ SUBROUTINE test_intersection_triangle_edge(res)
   TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
   TYPE(vector)        :: v =  vector((/-1, 2, 0/))
   TYPE(vector)        :: ei = vector((/ 0, 1, 1/))
+  TYPE(vector)        :: en = vector((/ 0, 0, -1/))
   TYPE(ray)           :: r = ray(vector((/0,1,0/)), vector((/0,0,1/)), ONE_VECTOR, 0)
   f = create_triangle(a, u, v)
-  CALL check_intersection_success(res, "intersection_triangle_edge", f, r, ei)
+  CALL check_intersection_success(res, "intersection_triangle_edge", f, r, ei, en)
 END SUBROUTINE test_intersection_triangle_edge
 
 SUBROUTINE test_intersection_triangle_vertex(res)
@@ -107,9 +112,10 @@ SUBROUTINE test_intersection_triangle_vertex(res)
   TYPE(vector)        :: u =  vector((/ 1, 2, 0/))
   TYPE(vector)        :: v =  vector((/-1, 2, 0/))
   TYPE(vector)        :: ei = vector((/ 1, 1, 1/))
+  TYPE(vector)        :: en = vector((/ 0, 0, -1/))
   TYPE(ray)           :: r = ray(vector((/1,1,0/)), vector((/0,0,1/)), ONE_VECTOR, 0)
   f = create_triangle(a, u, v)
-  CALL check_intersection_success(res, "intersection_triangle_vertex", f, r, ei)
+  CALL check_intersection_success(res, "intersection_triangle_vertex", f, r, ei, en)
 END SUBROUTINE test_intersection_triangle_vertex
 
 
@@ -132,13 +138,51 @@ SUBROUTINE test_intersection_triangle_miss(res)
   CALL check_intersection_miss(res, "intersection_triangle_miss r5", f, r5)
 END SUBROUTINE test_intersection_triangle_miss
 
-SUBROUTINE check_intersection_success(res, prefix, f, r, ei)
+SUBROUTINE test_intersection_sphere_center_outside(res)
   TYPE(test_result)   :: res
-  CHARACTER           :: prefix
+  TYPE(geom_form)     :: f
+  REAL                :: radius =  1
+  TYPE(vector)        :: c =  vector((/ 1, 1, 1/))
+  TYPE(vector)        :: ei = vector((/ 2, 1, 1/))
+  TYPE(vector)        :: en = vector((/ 1, 0, 0/))
+  TYPE(ray)           :: r = ray(vector((/4,1,1/)), vector((/-1,0,0/)), ONE_VECTOR, 0)
+  f = create_sphere(radius, c)
+  CALL check_intersection_success(res, "test_intersection_sphere_center_outside", f, r, ei, en)
+END SUBROUTINE test_intersection_sphere_center_outside
+
+SUBROUTINE test_intersection_sphere_uncentered_outside(res)
+  TYPE(test_result)   :: res
+  TYPE(geom_form)     :: f
+  REAL                :: radius =  1
+  TYPE(vector)        :: c =  vector((/ 1, 1, 1/))
+  TYPE(vector)        :: ei = vector((/ 1, 2, 1/))
+  TYPE(vector)        :: en = vector((/ 0, 1, 0/))
+  TYPE(ray)           :: r = ray(vector((/4., 1.999999, 1./)), vector((/-1,0,0/)), ONE_VECTOR, 0)
+  f = create_sphere(radius, c)
+  CALL check_intersection_success(res, "test_intersection_sphere_uncentered_outside", f, r, ei, en)
+END SUBROUTINE test_intersection_sphere_uncentered_outside
+
+SUBROUTINE test_intersection_sphere_center_inner(res)
+  TYPE(test_result)   :: res
+  TYPE(geom_form)     :: f
+  REAL                :: radius =  1
+  TYPE(vector)        :: c =  vector((/ 1, 1, 1/))
+  TYPE(vector)        :: ei = vector((/ 2, 1, 1/))
+  TYPE(vector)        :: en = vector((/ -1, 0, 0/))
+  TYPE(ray)           :: r = ray(vector((/1,1,1/)), vector((/1,0,0/)), ONE_VECTOR, 0)
+  f = create_sphere(radius, c)
+  CALL check_intersection_success(res, 'test_intersection_sphere_center_inner', f, r, ei, en)
+END SUBROUTINE test_intersection_sphere_center_inner
+
+SUBROUTINE check_intersection_success(res, prefix, f, r, ei, en)
+  TYPE(test_result)   :: res
+  CHARACTER           :: prefix*(*)
   TYPE(geom_form)     :: f
   TYPE(ray)           :: r
   TYPE(intersection)  :: i
-  TYPE(vector)        :: ei
+
+
+  TYPE(vector)        :: ei, en
   LOGICAL             :: failure
   i = find_intersection(f, r)
   failure = assertTrue(res, i%intersects)
@@ -148,6 +192,10 @@ SUBROUTINE check_intersection_success(res, prefix, f, r, ei)
   failure = assertTrue(res, is_equal_v(ei, i%point))
   IF (failure) THEN
     PRINT *, prefix, ": find_intersection encontrou ponto errado. Esperado", ei, " mas encontrado ", i%point
+  END IF
+  failure = assertTrue(res, is_equal_v(en, i%normal))
+  IF (failure) THEN
+    PRINT *, prefix, ": find_intersection encontrou normal errada. Esperado", en, " mas encontrado ", i%normal
   END IF
 END SUBROUTINE check_intersection_success
 

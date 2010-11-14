@@ -40,7 +40,7 @@ PROGRAM raytracer
     DO j = 1,imgwidth
       pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
       r = RAY(pov, pixel, ONE_VECTOR, 0)
-      color = raytrace(r)
+      color = raytrace(r, -1)
       red = int(color%v(1) * 255.)
       green = int(color%v(2) * 255.)
       blue = int(color%v(3) * 255.)
@@ -59,8 +59,9 @@ PROGRAM raytracer
 
 CONTAINS
 
-PURE FUNCTION find_ray_intersection(r) RESULT (inter)
+PURE FUNCTION find_ray_intersection(r, last_form_id) RESULT (inter)
   TYPE(RAY), INTENT(IN) :: r
+  INTEGER, INTENT(IN) :: last_form_id
   TYPE(intersection) :: inter, ninter
   TYPE(vector) :: v
   TYPE(geom_form) :: f
@@ -69,18 +70,20 @@ PURE FUNCTION find_ray_intersection(r) RESULT (inter)
 ! calculo da interseccao
   inter%intersects = .FALSE.
   DO i = 1,nobj
-    ninter = find_intersection(objects(i), r) 
-    IF (ninter%intersects) THEN
-      v = ninter%point - r%source
-      ninter_dist = vector_dot_product(v, v)
-      IF (.NOT. inter%intersects) THEN
-        inter = ninter
-        inter_dist = ninter_dist
-        f = objects(i)
-      ELSE IF (ninter_dist < inter_dist) THEN
-        inter = ninter
-        inter_dist = ninter_dist
-        f = objects(i)
+    IF (last_form_id /= objects(i)%id) THEN
+      ninter = find_intersection(objects(i), r)
+      IF (ninter%intersects) THEN
+        v = ninter%point - r%source
+        ninter_dist = vector_dot_product(v, v)
+        IF (.NOT. inter%intersects) THEN
+          inter = ninter
+          inter_dist = ninter_dist
+          f = objects(i)
+        ELSE IF (ninter_dist < inter_dist) THEN
+          inter = ninter
+          inter_dist = ninter_dist
+          f = objects(i)
+        END IF
       END IF
     END IF
   END DO
@@ -109,7 +112,7 @@ PURE FUNCTION reflection_color(r, inter) RESULT (color)
   refl%source = inter%point
   refl%depth = r%depth + 1
   refl%filter = r%filter * inter%form%reflection
-  color = raytrace(refl)
+  color = raytrace(refl, inter%form%id)
 END FUNCTION
 
 PURE FUNCTION refraction_color(r, inter) RESULT (color)
@@ -122,17 +125,18 @@ PURE FUNCTION refraction_color(r, inter) RESULT (color)
   refr%source = inter%point
   refr%depth = r%depth + 1
   refr%filter = r%filter * inter%form%transparency
-  color = raytrace(refr)
+  color = raytrace(refr, inter%form%id)
 END FUNCTION
 
-PURE FUNCTION raytrace(r) RESULT (color)
+PURE FUNCTION raytrace(r, last_form_id) RESULT (color)
   TYPE(RAY), INTENT(IN) :: r
+  INTEGER, INTENT(IN) :: last_form_id
   TYPE(vector) :: color, lum, refl, refr
   TYPE(intersection) :: inter
-  IF (r%depth > maxgen) THEN
+  IF (r%depth > maxgen .OR. (r%filter .DOT. r%filter) < threshold) THEN
     color = ZERO_VECTOR
   ELSE
-    inter = find_ray_intersection(r)
+    inter = find_ray_intersection(r, last_form_id)
     IF (inter%intersects) THEN
       lum = luminosity_color(r, inter)
       refl = reflection_color(r, inter)

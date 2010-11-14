@@ -28,7 +28,7 @@ END FUNCTION assertFalse
 FUNCTION is_equal_r(x, y)
   REAL     :: x, y
   LOGICAL is_equal_r
-  is_equal_r = ABS(x - y) < 0.00001
+  is_equal_r = ABS(x - y) < 0.01
   RETURN
 END FUNCTION is_equal_r
 

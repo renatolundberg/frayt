@@ -2,7 +2,6 @@ MODULE rayforms
   USE raymath
   IMPLICIT NONE
 
-  ! TODO: garantir que direction seja unitario
   TYPE ray
     TYPE(vector) source
     TYPE(vector) direction
@@ -29,6 +28,7 @@ MODULE rayforms
 
   TYPE geom_form
     INTEGER tp
+    INTEGER id
     TYPE(triangle) :: triangle
     TYPE(sphere)   :: sphere
     TYPE(vector) :: luminosity, reflection, transparency
@@ -41,11 +41,13 @@ MODULE rayforms
     TYPE(vector) point
     TYPE(vector) normal
   END TYPE
+
+  INTEGER :: last_id = 0
 CONTAINS
 
 
 ! constroi um triangulo
-PURE FUNCTION create_triangle(a, u, v)
+FUNCTION create_triangle(a, u, v)
   TYPE(vector), INTENT(IN) :: a, u, v
   TYPE(geom_form) create_triangle
   create_triangle%tp = TP_TRIANGLE
@@ -56,11 +58,13 @@ PURE FUNCTION create_triangle(a, u, v)
   create_triangle%triangle%uu = u .DOT. u
   create_triangle%triangle%uv = u .DOT. v
   create_triangle%triangle%vv = v .DOT. v
+  create_triangle%id = last_id + 1
+  last_id = create_triangle%id
   RETURN
 END FUNCTION create_triangle
 
 ! constroi uma esfera
-PURE FUNCTION create_sphere(radius, center)
+FUNCTION create_sphere(radius, center)
   TYPE(vector), INTENT(IN) :: center
   REAL, INTENT(IN) :: radius
   TYPE(geom_form) create_sphere
@@ -68,6 +72,8 @@ PURE FUNCTION create_sphere(radius, center)
   create_sphere%sphere%c = center
   create_sphere%sphere%r = radius
   create_sphere%sphere%r2 = radius * radius
+  create_sphere%id = last_id + 1
+  last_id = create_sphere%id
   RETURN
 END FUNCTION create_sphere
 
@@ -181,37 +187,34 @@ END FUNCTION find_intersection_triangle
 !       tca - sqrt(l2hc) : std::numeric_limits<float>::infinity();
 !   }
 !}
-PURE FUNCTION find_intersection_sphere(f, r)
+PURE FUNCTION find_intersection_sphere(f, r) RESULT (inter)
   TYPE(geom_form), INTENT(IN) :: f
   TYPE(ray), INTENT(IN) :: r
-  TYPE(intersection) find_intersection_sphere
-  TYPE(vector) :: oc
+  TYPE(intersection) inter
+  TYPE(vector) :: oc, n
   REAL :: l2oc, tca, l2hc
-
   oc = f%sphere%c - r%source
   l2oc = oc.DOT.oc
-  tca = oc.DOT.r%direction !TODO: garantir que o vetor direction e' unitario
+  tca = oc.DOT.r%direction
   l2hc = ( f%sphere%r2 - l2oc ) + ( tca * tca )
 
   IF ( l2oc < f%sphere%r2 ) THEN ! o raio e' gerado dentro da esfera
-    find_intersection_sphere%intersects = .TRUE.
-    find_intersection_sphere%point = r%source + ( r%direction * ( tca + SQRT(l2hc) ))
+    inter%intersects = .TRUE.
+    inter%form = f
+    inter%point = r%source + ( r%direction * ( tca + SQRT(l2hc) ))
+    inter%normal = vector_to_unit(f%sphere%c - inter%point)
+  ELSE IF ( tca < 0 ) THEN ! o raio aponta para o outro lado
+    inter%intersects = .FALSE.
+  ELSE IF (l2hc > 0) THEN ! TODO: verificar limites de erros numericos
+    inter%intersects = .TRUE.
+    inter%form = f
+    inter%point = r%source + ( r%direction * ( tca - SQRT(l2hc) ))
+    inter%normal = vector_to_unit(inter%point - f%sphere%c)
     RETURN
+  ELSE
+    inter%intersects = .FALSE.
   END IF
-
-  IF ( tca < 0 ) THEN ! o raio aponta para o outro lado
-    find_intersection_sphere%intersects = .FALSE.
-    RETURN
-  END IF
-
-  IF (l2hc > 0 ) THEN ! TODO: verificar limites de erros numericos
-    find_intersection_sphere%intersects = .TRUE.
-    find_intersection_sphere%point = r%source + ( r%direction * ( tca + SQRT(l2hc) ))
-    RETURN
-  END IF
-
-  find_intersection_sphere%intersects = .FALSE.
   RETURN
-END FUNCTION find_intersection_sphere
+END FUNCTION
 
 END MODULE rayforms
