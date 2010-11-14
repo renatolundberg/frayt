@@ -4,7 +4,7 @@ FCFLAGS = -Wall -pedantic -Jbin -g -O3 -fopenmp# TODO: colocar O3 de volta
 MODULES = bin/raymath.o bin/rayforms.o bin/raytest.o
 SRCFILES = src/*
 
-all: raytracer tests
+all: raytracer tests images
 
 # regra para o programa principal
 raytracer: bin/raytracer.o ${MODULES}
@@ -14,12 +14,13 @@ raytracer: bin/raytracer.o ${MODULES}
 tests: raytracer bin/raymath_test bin/rayforms_test
 	bin/raymath_test
 	bin/rayforms_test
-	./raytracer cena1/mundo.txt cena1/pov.txt cena1/imagem.pnm 800 800 0.001 10
-	./raytracer cena2/mundo.txt cena2/pov.txt cena2/imagem.pnm 800 800 0.001 10
-	./raytracer cena3/mundo.txt cena3/pov.txt cena3/imagem.pnm 800 800 0.001 10
-	./raytracer cena4/mundo.txt cena4/pov.txt cena4/imagem.pnm 800 800 0.001 10
-	./raytracer cena5/mundo.txt cena5/pov.txt cena5/imagem.pnm 800 800 0.001 10
-	./raytracer cena6/mundo.txt cena6/pov.txt cena6/imagem.pnm 800 800 0.001 10
+
+# regras para gerar as imagens
+images: raytracer
+	for i in cena*; do make $$i/imagem.pnm; cp $$i/imagem.pnm img/$$i.pnm; done
+
+cena%/imagem.pnm:
+	./raytracer $(subst imagem.pnm,,$@)mundo.txt $(subst imagem.pnm,,$@)pov.txt $@ 800 800 0.001 10
 
 bin/%_test: bin/%_test.o ${MODULES}
 	${FC} ${FCFLAGS} -o $@ $^
@@ -40,9 +41,12 @@ bin/raytracer.o: ${MODULES}
 
 # outras regras
 clean:
-	rm -rf bin/* raytracer
+	rm -rf bin/* raytracer cena*/imagem.pnm img/*
 
 edit:
 	editor -p ${SRCFILES} imagem.ppm makefile
 
-.PHONY: all tests clean edit
+push: clean
+	git push
+
+.PHONY: all tests clean edit images push

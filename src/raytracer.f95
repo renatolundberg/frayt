@@ -125,12 +125,13 @@ PURE FUNCTION refraction_color(r, inter) RESULT (color)
   TYPE(RAY) :: refr
   TYPE(vector) :: color
   REAL :: cos1, cos2
-! TODO calcular o efeito da refracao!!!!!
   ! Lei de snell: sen(teta1)/sen(teta2) = n2/n1
   ! http://en.wikipedia.org/wiki/Snell_law
   cos1 = ((r%direction*(-1.0)) .DOT. inter%normal)
   cos2 = sqrt(1.0-(1.0/inter%form%refraction)*(1.0/inter%form%refraction)*(1-(cos1*cos1)))
-  !refr%direction = r%direction
+  if (cos1 .LE. 0) then
+    cos2 = cos2 * (-1.0)
+  end if
   refr%direction = (r%direction*(1.0/inter%form%refraction)) + (inter%normal*((1.0/inter%form%refraction*cos1) - cos2))
   refr%source = inter%point
   refr%depth = r%depth + 1
