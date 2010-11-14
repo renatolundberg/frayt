@@ -164,9 +164,11 @@ pure function calc_root_of_linear(c1, c0) result(ret)
   if (is_zero(c1)) then
     ret%num_val = 0
     ret%value(1) = 0.0
+    ret%value(2) = 0.0
   else
     ret%num_val = 1
     ret%value(1) = fdiv(-c0,c1)
+    ret%value(2) = 0.0
   end if
 end function calc_root_of_linear
 

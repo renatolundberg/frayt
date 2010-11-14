@@ -117,6 +117,7 @@ PURE FUNCTION find_intersection_triangle(f, r)
   IF (is_zero(b)) THEN     ! raio é paralelo ao plano
     find_intersection_triangle%intersects = .FALSE.
     find_intersection_triangle%point = ZERO_VECTOR
+    find_intersection_triangle%normal = ZERO_VECTOR
     RETURN
   END IF
 
@@ -125,6 +126,7 @@ PURE FUNCTION find_intersection_triangle(f, r)
   IF (dd < 0.0) THEN !raio vai na direcao oposta ao triangulo
     find_intersection_triangle%intersects = .FALSE.
     find_intersection_triangle%point = ZERO_VECTOR
+    find_intersection_triangle%normal = ZERO_VECTOR
     RETURN
   END IF
 
@@ -134,6 +136,7 @@ PURE FUNCTION find_intersection_triangle(f, r)
   IF (is_zero(dist .DOT. dist)) THEN
     find_intersection_triangle%intersects = .FALSE.
     find_intersection_triangle%point = ZERO_VECTOR
+    find_intersection_triangle%normal = ZERO_VECTOR
     RETURN
   END IF
 
@@ -149,12 +152,14 @@ PURE FUNCTION find_intersection_triangle(f, r)
   IF (s < 0.0 .OR. s > 1.0) THEN
     find_intersection_triangle%intersects = .FALSE.
     find_intersection_triangle%point = ZERO_VECTOR
+    find_intersection_triangle%normal = ZERO_VECTOR
     RETURN
   END IF
   t = (uv * wu - uu * wv) / D
   IF (t < 0.0 .OR. (s + t) > 1.0) THEN
     find_intersection_triangle%intersects = .FALSE.
     find_intersection_triangle%point = ZERO_VECTOR
+    find_intersection_triangle%normal = ZERO_VECTOR
     RETURN
   END IF
   find_intersection_triangle%intersects = .TRUE.
@@ -191,7 +196,7 @@ PURE FUNCTION find_intersection_sphere(f, r) RESULT (inter)
   TYPE(geom_form), INTENT(IN) :: f
   TYPE(ray), INTENT(IN) :: r
   TYPE(intersection) inter
-  TYPE(vector) :: oc, n
+  TYPE(vector) :: oc
   REAL :: l2oc, tca, l2hc
   oc = f%sphere%c - r%source
   l2oc = oc.DOT.oc

@@ -8,10 +8,11 @@ PROGRAM raytracer
   CHARACTER(50) :: buffer
   INTEGER :: i, j, nobj
   TYPE(vector) :: color
-  TYPE(RAY) :: r
-  TYPE(VECTOR) :: pov, pid, pie, psd, pse
-  TYPE(VECTOR) :: pixel
-  TYPE(GEOM_FORM), ALLOCATABLE :: objects(:)
+  TYPE(ray) :: r
+  TYPE(vector) :: pov, pid, pie, psd, pse
+  TYPE(vector) :: pixel
+  TYPE(geom_form), ALLOCATABLE :: objects(:)
+  INTEGER, ALLOCATABLE :: image(:,:,:)
 
   ! argumentos da linha de comando
   CHARACTER(50) :: worldfile! arquivo de especificacao do mundo
@@ -21,12 +22,27 @@ PROGRAM raytracer
   INTEGER :: imgheight ! altura da imagem (0 mantem proporcao)
   REAL :: threshold ! limiar de visao
   INTEGER :: maxgen ! numero maximo de geracoes de um raio
-  INTEGER :: red, green, blue
 
   CALL read_commandline_args
   CALL read_worldfile
-  CALL list_objects
+! CALL list_objects
   CALL read_povfile
+
+  ALLOCATE (image(3, imgwidth, imgheight))
+
+  ! loop principal
+!$OMP PARALLEL DO SCHEDULE(DYNAMIC, 10) PRIVATE(i, j, pixel, r, color) SHARED(image, pie, pse, pid, psd, pov, imgheight, imgwidth)
+  DO i = 1,imgheight
+    DO j = 1,imgwidth
+      pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
+      r = RAY(pov, pixel, ONE_VECTOR, 0)
+      color = raytrace(r, -1)
+      image(1,j,i) = int(color%v(1) * 255.)
+      image(2,j,i) = int(color%v(2) * 255.)
+      image(3,j,i) = int(color%v(3) * 255.)
+    END DO
+  END DO
+!$OMP END PARALLEL DO
 
   ! abre a imagem e escreve o cabecalho PPM:
   !   P3 - Portable Pixmap em ASCII
@@ -35,23 +51,11 @@ PROGRAM raytracer
   write (2,*) imgwidth, ' ', imgheight
   write (2,*) '255'
 
-  ! loop principal
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
-      r = RAY(pov, pixel, ONE_VECTOR, 0)
-      color = raytrace(r, -1)
-      red = int(color%v(1) * 255.)
-      green = int(color%v(2) * 255.)
-      blue = int(color%v(3) * 255.)
-      write (2,'(I3,A,I3,A,I3,A)',advance='no') red, ' ', &
-                                                green, ' ', &
-                                                blue, ' '
-!     write (2,'(I3,A,I3,A,I3,A)',advance='no') int(cos(2*3.1415*i*j)*126+126), ' ', &
-!                                               int(cos(2*3.1415*(imgheight-i)*(imgwidth-j))*126+126), ' ', &
-!                                               int(cos(2*3.1415*(i+30)*(j+50))*126+126), ' '
-      IF (j == imgwidth) write (2,*)
+      write (2,'(I3,A,I3,A,I3,A)',advance='no') image(1, j, i), ' ', image(2, j, i), ' ', image(3, j, i), ' '
     END DO
+    write (2,*)
   END DO
 
   ! fecha o arquivo de imagem
