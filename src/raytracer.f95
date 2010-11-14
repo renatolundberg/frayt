@@ -25,7 +25,7 @@ PROGRAM raytracer
 
   CALL read_commandline_args
   CALL read_worldfile
-! CALL list_objects
+ !CALL list_objects
   CALL read_povfile
 
   ALLOCATE (image(3, imgwidth, imgheight))
@@ -124,8 +124,14 @@ PURE FUNCTION refraction_color(r, inter) RESULT (color)
   TYPE(intersection), INTENT(IN) :: inter
   TYPE(RAY) :: refr
   TYPE(vector) :: color
+  REAL :: cos1, cos2
 ! TODO calcular o efeito da refracao!!!!!
-  refr%direction = r%direction
+  ! Lei de snell: sen(teta1)/sen(teta2) = n2/n1
+  ! http://en.wikipedia.org/wiki/Snell_law
+  cos1 = ((r%direction*(-1.0)) .DOT. inter%normal)
+  cos2 = sqrt(1.0-(1.0/inter%form%refraction)*(1.0/inter%form%refraction)*(1-(cos1*cos1)))
+  !refr%direction = r%direction
+  refr%direction = (r%direction*(1.0/inter%form%refraction)) + (inter%normal*((1.0/inter%form%refraction*cos1) - cos2))
   refr%source = inter%point
   refr%depth = r%depth + 1
   refr%filter = r%filter * inter%form%transparency
