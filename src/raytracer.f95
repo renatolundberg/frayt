@@ -45,17 +45,17 @@ PROGRAM raytracer
 !$OMP END PARALLEL DO
 
   ! abre a imagem e escreve o cabecalho PPM:
-  !   P3 - Portable Pixmap em ASCII
+  !   P6 - Portable Pixmap em Binario
   open (unit = 2, file = imgfile)
-  write (2,'(A2)') 'P3'
-  write (2,*) imgwidth, ' ', imgheight
-  write (2,*) '255'
+  write (2,'(A2)') 'P6'
+  write (2,'(I0,A,I0)') imgwidth, ' ', imgheight
+  write (2,'(A3)') '255'
 
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      write (2,'(I3,A,I3,A,I3,A)',advance='no') image(1, j, i), ' ', image(2, j, i), ' ', image(3, j, i), ' '
+      write (2,'(3A1)',advance='no') achar(image(1, j, i)), achar(image(2, j, i)), achar(image(3, j, i))
     END DO
-    write (2,*)
+    !write (2,*)
   END DO
 
   ! fecha o arquivo de imagem
