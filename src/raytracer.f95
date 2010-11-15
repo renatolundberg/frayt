@@ -42,7 +42,7 @@ PROGRAM raytracer
     DO j = 1,imgwidth
       pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
       r = RAY(pov, pixel, ONE_VECTOR, 0)
-      color = raytrace(r, -1)
+      color = raytrace(r, -1, 1.0)
       image(1,j,i) = color%v(1)
       image(2,j,i) = color%v(2)
       image(3,j,i) = color%v(3)
@@ -124,9 +124,10 @@ PURE FUNCTION luminosity_color(r, inter) RESULT (color)
   color%v(3) = max(0., color%v(3))
 END FUNCTION
 
-PURE FUNCTION reflection_color(r, inter) RESULT (color)
+PURE FUNCTION reflection_color(r, inter, last_refraction_index) RESULT (color)
   TYPE(RAY), INTENT(IN) :: r
   TYPE(intersection), INTENT(IN) :: inter
+  REAL, INTENT(IN) :: last_refraction_index
   TYPE(RAY) :: refl
   TYPE(vector) :: color
   REAL p
@@ -138,48 +139,48 @@ PURE FUNCTION reflection_color(r, inter) RESULT (color)
     refl%direction = vector_to_unit(r%direction - inter%normal * p)
     refl%source = inter%point
     refl%depth = r%depth + 1
-    color = raytrace(refl, inter%form%id)
+    color = raytrace(refl, inter%form%id, last_refraction_index)
   END IF
 END FUNCTION
 
-PURE FUNCTION refraction_color(r, inter) RESULT (color)
+PURE FUNCTION refraction_color(r, inter, last_refraction_index) RESULT (color)
   TYPE(RAY), INTENT(IN) :: r
   TYPE(intersection), INTENT(IN) :: inter
+  REAL, INTENT(IN) :: last_refraction_index
   TYPE(RAY) :: refr
   TYPE(vector) :: color
-  REAL :: cos1, cos2
+  REAL :: cos1, cos2, n1n2
   ! Lei de snell: sen(teta1)/sen(teta2) = n2/n1
   ! http://en.wikipedia.org/wiki/Snell_law
+  n1n2 = last_refraction_index/inter%form%refraction
   cos1 = ((r%direction*(-1.0)) .DOT. inter%normal)
-  cos2 = sqrt(1.0-(1.0/inter%form%refraction)*(1.0/inter%form%refraction)*(1-(cos1*cos1)))
+  cos2 = sqrt(1.0-(n1n2*n1n2)*(1-(cos1*cos1)))
   IF (cos1 .LE. 0) THEN
     cos2 = cos2 * (-1.0)
   END IF
-  refr%direction = (r%direction*(1.0/inter%form%refraction)) + (inter%normal*((1.0/inter%form%refraction*cos1) - cos2))
+  refr%direction = (r%direction*n1n2) + (inter%normal*((n1n2*cos1) - cos2))
   refr%source = inter%point
   refr%depth = r%depth + 1
   refr%filter = r%filter * inter%form%transparency
   IF ((r%filter .DOT. r%filter) < threshold) THEN
     color = ZERO_VECTOR
   ELSE
-    refr%direction = r%direction
-    refr%source = inter%point
-    refr%depth = r%depth + 1
-    color = raytrace(refr, inter%form%id)
+    color = raytrace(refr, inter%form%id, inter%form%refraction)
   END IF
 END FUNCTION
 
-PURE FUNCTION raytrace(r, last_form_id) RESULT (color)
+PURE FUNCTION raytrace(r, last_form_id, last_refraction_index) RESULT (color)
   TYPE(RAY), INTENT(IN) :: r
   INTEGER, INTENT(IN) :: last_form_id
+  REAL, INTENT(IN) :: last_refraction_index
   TYPE(vector) :: color
   TYPE(intersection) :: inter
   inter = find_ray_intersection(r, last_form_id)
   IF (inter%intersects) THEN
     color = luminosity_color(r, inter)
     IF (r%depth < maxgen) THEN
-      color = color + reflection_color(r, inter)
-      color = color + refraction_color(r, inter)
+      color = color + reflection_color(r, inter, last_refraction_index)
+      color = color + refraction_color(r, inter, last_refraction_index)
     END IF
     color = r%filter * color
   ELSE
