@@ -1,5 +1,5 @@
 FC = gfortran
-FCFLAGS = -Wall -pedantic -Jbin -g -O3 -fopenmp# TODO: colocar O3 de volta
+FCFLAGS = -Wall -pedantic -Jbin -g -O3 -fopenmp
 
 MODULES = bin/raymath.o bin/rayforms.o bin/raytest.o
 SRCFILES = src/*
@@ -44,9 +44,13 @@ clean:
 	rm -rf bin/* raytracer cena*/imagem.pnm img/*
 
 edit:
-	editor -p ${SRCFILES} imagem.ppm makefile
+	editor -p ${SRCFILES} makefile
 
 push: clean
 	git push
 
-.PHONY: all tests clean edit images push
+debug: raytracer
+	gdb --args ./$< cena5/mundo.txt cena5/pov.txt cena5/imagem.pnm 800 800 0.0001 10
+
+
+.PHONY: all tests clean edit images push debug
