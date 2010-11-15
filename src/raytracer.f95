@@ -12,7 +12,8 @@ PROGRAM raytracer
   TYPE(vector) :: pov, pid, pie, psd, pse
   TYPE(vector) :: pixel
   TYPE(geom_form), ALLOCATABLE :: objects(:)
-  INTEGER, ALLOCATABLE :: image(:,:,:)
+  REAL, ALLOCATABLE :: image(:,:,:)
+  REAL, ALLOCATABLE :: max_row(:)
 
   ! argumentos da linha de comando
   CHARACTER(50) :: worldfile! arquivo de especificacao do mundo
@@ -22,6 +23,7 @@ PROGRAM raytracer
   INTEGER :: imgheight ! altura da imagem (0 mantem proporcao)
   REAL :: threshold ! limiar de visao
   INTEGER :: maxgen ! numero maximo de geracoes de um raio
+  REAL :: max_color = 1
 
   CALL read_commandline_args
   CALL read_worldfile
@@ -29,21 +31,29 @@ PROGRAM raytracer
   CALL read_povfile
 
   ALLOCATE (image(3, imgwidth, imgheight))
+  ALLOCATE (max_row(imgheight))
 
   ! loop principal
-!$OMP PARALLEL DO SCHEDULE(DYNAMIC, 10) PRIVATE(i, j, pixel, r, color) SHARED(image, pie, pse, pid, psd, pov, imgheight, imgwidth)
+!$OMP PARALLEL DO SCHEDULE(DYNAMIC, 10) &
+!$OMP                                     PRIVATE(i, j, pixel, r, color) &
+!$OMP                                     SHARED(max_row, image, pie, pse, pid, psd, pov, imgheight, imgwidth)
   DO i = 1,imgheight
+    max_row(i) = 0
     DO j = 1,imgwidth
       pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
       r = RAY(pov, pixel, ONE_VECTOR, 0)
       color = raytrace(r, -1)
-      image(1,j,i) = int(color%v(1) * 255.)
-      image(2,j,i) = int(color%v(2) * 255.)
-      image(3,j,i) = int(color%v(3) * 255.)
+      image(1,j,i) = color%v(1)
+      image(2,j,i) = color%v(2)
+      image(3,j,i) = color%v(3)
+      max_row(i) = max(max_row(i), max(image(1,j,i), max(image(2,j,i), image(3,j,i))))
     END DO
   END DO
 !$OMP END PARALLEL DO
 
+  DO i = 1,imgheight
+    max_color = max(max_color, max_row(i))
+  END DO
   ! abre a imagem e escreve o cabecalho PPM:
   !   P3 - Portable Pixmap em ASCII
   open (unit = 2, file = imgfile)
@@ -51,11 +61,17 @@ PROGRAM raytracer
   write (2,*) imgwidth, ' ', imgheight
   write (2,*) '255'
 
+!  close(2)
+!  open (unit = 2, file = imgfile, form = 'UNFORMATTED', access = 'APPEND')
+
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      write (2,'(I3,A,I3,A,I3,A)',advance='no') image(1, j, i), ' ', image(2, j, i), ' ', image(3, j, i), ' '
+      WRITE (2, '(I3,A)',advance='no') int((image(1, j, i) / max_color) * 255), ' '
+      WRITE (2, '(I3,A)',advance='no') int((image(2, j, i) / max_color) * 255), ' '
+      WRITE (2, '(I3,A)',advance='no') int((image(3, j, i) / max_color) * 255), ' '
+!      write (2,'(I3,A,I3,A,I3,A)',advance='no') int(image(1, j, i)), ' ', int(image(2, j, i)), ' ', int(image(3, j, i)), ' '
+!      write (2) image(1, j, i), image(2, j, i), image(3, j, i)
     END DO
-    write (2,*)
   END DO
 
   ! fecha o arquivo de imagem
@@ -70,8 +86,10 @@ PURE FUNCTION find_ray_intersection(r, last_form_id) RESULT (inter)
   TYPE(vector) :: v
   TYPE(geom_form) :: f
   INTEGER :: i
-  REAL :: inter_dist, ninter_dist
+  REAL :: inter_dist
+  REAL :: ninter_dist
 ! calculo da interseccao
+  inter_dist = 0.
   inter%intersects = .FALSE.
   DO i = 1,nobj
     IF (last_form_id /= objects(i)%id) THEN
@@ -111,12 +129,16 @@ PURE FUNCTION reflection_color(r, inter) RESULT (color)
   TYPE(RAY) :: refl
   TYPE(vector) :: color
   REAL p
-  p = vector_dot_product(inter%normal, r%direction) * 2
-  refl%direction = vector_to_unit(r%direction - inter%normal * p)
-  refl%source = inter%point
-  refl%depth = r%depth + 1
   refl%filter = r%filter * inter%form%reflection
-  color = raytrace(refl, inter%form%id)
+  IF ((r%filter .DOT. r%filter) < threshold) THEN
+    color = ZERO_VECTOR
+  ELSE
+    p = vector_dot_product(inter%normal, r%direction) * 2
+    refl%direction = vector_to_unit(r%direction - inter%normal * p)
+    refl%source = inter%point
+    refl%depth = r%depth + 1
+    color = raytrace(refl, inter%form%id)
+  END IF
 END FUNCTION
 
 PURE FUNCTION refraction_color(r, inter) RESULT (color)
@@ -124,31 +146,33 @@ PURE FUNCTION refraction_color(r, inter) RESULT (color)
   TYPE(intersection), INTENT(IN) :: inter
   TYPE(RAY) :: refr
   TYPE(vector) :: color
-! TODO calcular o efeito da refracao!!!!!
-  refr%direction = r%direction
-  refr%source = inter%point
-  refr%depth = r%depth + 1
   refr%filter = r%filter * inter%form%transparency
-  color = raytrace(refr, inter%form%id)
+  IF ((r%filter .DOT. r%filter) < threshold) THEN
+    color = ZERO_VECTOR
+  ELSE
+! TODO calcular o efeito da refracao!!!!!
+    refr%direction = r%direction
+    refr%source = inter%point
+    refr%depth = r%depth + 1
+    color = raytrace(refr, inter%form%id)
+  END IF
 END FUNCTION
 
 PURE FUNCTION raytrace(r, last_form_id) RESULT (color)
   TYPE(RAY), INTENT(IN) :: r
   INTEGER, INTENT(IN) :: last_form_id
-  TYPE(vector) :: color, lum, refl, refr
+  TYPE(vector) :: color
   TYPE(intersection) :: inter
-  IF (r%depth > maxgen .OR. (r%filter .DOT. r%filter) < threshold) THEN
-    color = ZERO_VECTOR
-  ELSE
-    inter = find_ray_intersection(r, last_form_id)
-    IF (inter%intersects) THEN
-      lum = luminosity_color(r, inter)
-      refl = reflection_color(r, inter)
-      refr = refraction_color(r, inter)
-      color = r%filter * (lum + refl + refr)
-    ELSE
-      color = ZERO_VECTOR
+  inter = find_ray_intersection(r, last_form_id)
+  IF (inter%intersects) THEN
+    color = luminosity_color(r, inter)
+    IF (r%depth < maxgen) THEN
+      color = color + reflection_color(r, inter)
+      color = color + refraction_color(r, inter)
     END IF
+    color = r%filter * color
+  ELSE
+    color = ZERO_VECTOR
   END IF
 END FUNCTION
 

@@ -18,6 +18,7 @@ tests: raytracer bin/raymath_test bin/rayforms_test
 	./raytracer cena2/mundo.txt cena2/pov.txt cena2/imagem.pnm 800 800 0.001 10
 	./raytracer cena3/mundo.txt cena3/pov.txt cena3/imagem.pnm 800 800 0.001 10
 	./raytracer cena4/mundo.txt cena4/pov.txt cena4/imagem.pnm 800 800 0.001 10
+	./raytracer cena5/mundo.txt cena5/pov.txt cena5/imagem.pnm 800 600 0.01  20
 
 bin/%_test: bin/%_test.o ${MODULES}
 	${FC} ${FCFLAGS} -o $@ $^

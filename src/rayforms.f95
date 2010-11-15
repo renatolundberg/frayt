@@ -164,7 +164,11 @@ PURE FUNCTION find_intersection_triangle(f, r)
   END IF
   find_intersection_triangle%intersects = .TRUE.
   find_intersection_triangle%point = I
-  find_intersection_triangle%normal = f%triangle%n
+  IF ((r%direction .DOT. f%triangle%n) < 0) THEN
+    find_intersection_triangle%normal = f%triangle%n
+  ELSE
+    find_intersection_triangle%normal = ZERO_VECTOR - f%triangle%n
+  END IF
   find_intersection_triangle%form = f
   RETURN
 END FUNCTION find_intersection_triangle
