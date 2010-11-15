@@ -19,7 +19,7 @@ tests: raytracer bin/raymath_test bin/rayforms_test
 images: raytracer
 	for i in cena*; do make $$i/imagem.pnm; cp $$i/imagem.pnm img/$$i.pnm; done
 
-cena%/imagem.pnm:
+cena%/imagem.pnm: $(subst imagem.pnm,mundo.txt,$@) $(subst imagem.pnm,pov.txt,$@) raytracer
 	./raytracer $(subst imagem.pnm,,$@)mundo.txt $(subst imagem.pnm,,$@)pov.txt $@ 800 800 0.001 10
 
 bin/%_test: bin/%_test.o ${MODULES}
