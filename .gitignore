@@ -4,3 +4,4 @@ raytracer
 /imagem.ppm
 /.settings
 cena*/imagem.pnm
+*.log
