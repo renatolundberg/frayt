@@ -201,4 +201,11 @@ pure function calc_root_of_quadratic(c2, c1, c0) result(ret)
 end function calc_root_of_quadratic
 
 
+! calcula a norma de um vetor
+pure function vector_norm(v) result (ret)
+  type(vector), intent(in) :: v
+  real :: ret
+  ret = sqrt(v%v(1)*v%v(1)+v%v(2)*v%v(2)+v%v(3)*v%v(3))
+end function vector_norm
+
 END MODULE raymath

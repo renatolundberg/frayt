@@ -27,7 +27,7 @@ PROGRAM raytracer
 
   CALL read_commandline_args
   CALL read_worldfile
-! CALL list_objects
+ !CALL list_objects
   CALL read_povfile
 
   ALLOCATE (image(3, imgwidth, imgheight))
@@ -55,22 +55,23 @@ PROGRAM raytracer
     max_color = max(max_color, max_row(i))
   END DO
   ! abre a imagem e escreve o cabecalho PPM:
-  !   P3 - Portable Pixmap em ASCII
+  !   P6 - Portable Pixmap em Binario
   open (unit = 2, file = imgfile)
-  write (2,'(A2)') 'P3'
-  write (2,*) imgwidth, ' ', imgheight
-  write (2,*) '255'
+  write (2,'(A2)') 'P6'
+  write (2,'(I0,A,I0)') imgwidth, ' ', imgheight
+  write (2,'(A3)') '255'
 
 !  close(2)
 !  open (unit = 2, file = imgfile, form = 'UNFORMATTED', access = 'APPEND')
 
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      WRITE (2, '(I3,A)',advance='no') int((image(1, j, i) / max_color) * 255), ' '
-      WRITE (2, '(I3,A)',advance='no') int((image(2, j, i) / max_color) * 255), ' '
-      WRITE (2, '(I3,A)',advance='no') int((image(3, j, i) / max_color) * 255), ' '
+      WRITE (2, '(A1)',advance='no') achar(int((image(1, j, i) / max_color) * 255.))
+      WRITE (2, '(A1)',advance='no') achar(int((image(2, j, i) / max_color) * 255.))
+      WRITE (2, '(A1)',advance='no') achar(int((image(3, j, i) / max_color) * 255.))
 !      write (2,'(I3,A,I3,A,I3,A)',advance='no') int(image(1, j, i)), ' ', int(image(2, j, i)), ' ', int(image(3, j, i)), ' '
 !      write (2) image(1, j, i), image(2, j, i), image(3, j, i)
+!      write (2,'(3A1)',advance='no') achar(image(1, j, i)), achar(image(2, j, i)), achar(image(3, j, i))
     END DO
   END DO
 
@@ -146,11 +147,21 @@ PURE FUNCTION refraction_color(r, inter) RESULT (color)
   TYPE(intersection), INTENT(IN) :: inter
   TYPE(RAY) :: refr
   TYPE(vector) :: color
+  REAL :: cos1, cos2
+  ! Lei de snell: sen(teta1)/sen(teta2) = n2/n1
+  ! http://en.wikipedia.org/wiki/Snell_law
+  cos1 = ((r%direction*(-1.0)) .DOT. inter%normal)
+  cos2 = sqrt(1.0-(1.0/inter%form%refraction)*(1.0/inter%form%refraction)*(1-(cos1*cos1)))
+  IF (cos1 .LE. 0) THEN
+    cos2 = cos2 * (-1.0)
+  END IF
+  refr%direction = (r%direction*(1.0/inter%form%refraction)) + (inter%normal*((1.0/inter%form%refraction*cos1) - cos2))
+  refr%source = inter%point
+  refr%depth = r%depth + 1
   refr%filter = r%filter * inter%form%transparency
   IF ((r%filter .DOT. r%filter) < threshold) THEN
     color = ZERO_VECTOR
   ELSE
-! TODO calcular o efeito da refracao!!!!!
     refr%direction = r%direction
     refr%source = inter%point
     refr%depth = r%depth + 1
