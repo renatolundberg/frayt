@@ -13,7 +13,6 @@ PROGRAM raytracer
   TYPE(vector) :: pixel
   TYPE(geom_form), ALLOCATABLE :: objects(:)
   REAL, ALLOCATABLE :: image(:,:,:)
-  REAL, ALLOCATABLE :: max_row(:)
 
   ! argumentos da linha de comando
   CHARACTER(50) :: worldfile! arquivo de especificacao do mundo
@@ -23,7 +22,6 @@ PROGRAM raytracer
   INTEGER :: imgheight ! altura da imagem (0 mantem proporcao)
   REAL :: threshold ! limiar de visao
   INTEGER :: maxgen ! numero maximo de geracoes de um raio
-  REAL :: max_color = 1
 
   CALL read_commandline_args
   CALL read_worldfile
@@ -31,14 +29,12 @@ PROGRAM raytracer
   CALL read_povfile
 
   ALLOCATE (image(3, imgwidth, imgheight))
-  ALLOCATE (max_row(imgheight))
 
   ! loop principal
 !$OMP PARALLEL DO SCHEDULE(DYNAMIC, 10) &
 !$OMP                                     PRIVATE(i, j, pixel, r, color) &
-!$OMP                                     SHARED(max_row, image, pie, pse, pid, psd, pov, imgheight, imgwidth)
+!$OMP                                     SHARED(image, pie, pse, pid, psd, pov, imgheight, imgwidth)
   DO i = 1,imgheight
-    max_row(i) = 0
     DO j = 1,imgwidth
       pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
       r = RAY(pov, pixel, ONE_VECTOR, 0)
@@ -46,14 +42,10 @@ PROGRAM raytracer
       image(1,j,i) = color%v(1)
       image(2,j,i) = color%v(2)
       image(3,j,i) = color%v(3)
-      max_row(i) = max(max_row(i), max(image(1,j,i), max(image(2,j,i), image(3,j,i))))
     END DO
   END DO
 !$OMP END PARALLEL DO
 
-  DO i = 1,imgheight
-    max_color = max(max_color, max_row(i))
-  END DO
   ! abre a imagem e escreve o cabecalho PPM:
   !   P6 - Portable Pixmap em Binario
   open (unit = 2, file = imgfile)
@@ -66,12 +58,9 @@ PROGRAM raytracer
 
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      WRITE (2, '(A1)',advance='no') achar(int((image(1, j, i) / max_color) * 255.))
-      WRITE (2, '(A1)',advance='no') achar(int((image(2, j, i) / max_color) * 255.))
-      WRITE (2, '(A1)',advance='no') achar(int((image(3, j, i) / max_color) * 255.))
-!      write (2,'(I3,A,I3,A,I3,A)',advance='no') int(image(1, j, i)), ' ', int(image(2, j, i)), ' ', int(image(3, j, i)), ' '
-!      write (2) image(1, j, i), image(2, j, i), image(3, j, i)
-!      write (2,'(3A1)',advance='no') achar(image(1, j, i)), achar(image(2, j, i)), achar(image(3, j, i))
+      WRITE (2, '(A1)',advance='no') achar(int(min(1.0, image(1, j, i)) * 255.))
+      WRITE (2, '(A1)',advance='no') achar(int(min(1.0, image(2, j, i)) * 255.))
+      WRITE (2, '(A1)',advance='no') achar(int(min(1.0, image(3, j, i)) * 255.))
     END DO
   END DO
 
