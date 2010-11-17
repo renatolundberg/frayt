@@ -121,7 +121,7 @@ PURE FUNCTION reflection_color(r, inter, last_refraction_index) RESULT (color)
   TYPE(vector) :: color
   REAL p
   refl%filter = r%filter * inter%form%reflection
-  IF ((r%filter .DOT. r%filter) < threshold) THEN
+  IF ((refl%filter .DOT. refl%filter) < threshold) THEN
     color = ZERO_VECTOR
   ELSE
     p = vector_dot_product(inter%normal, r%direction) * 2
@@ -139,21 +139,21 @@ PURE FUNCTION refraction_color(r, inter, last_refraction_index) RESULT (color)
   TYPE(RAY) :: refr
   TYPE(vector) :: color
   REAL :: cos1, cos2, n1n2
-  ! Lei de snell: sen(teta1)/sen(teta2) = n2/n1
-  ! http://en.wikipedia.org/wiki/Snell_law
-  n1n2 = last_refraction_index/inter%form%refraction
-  cos1 = ((r%direction*(-1.0)) .DOT. inter%normal)
-  cos2 = sqrt(1.0-(n1n2*n1n2)*(1-(cos1*cos1)))
-  IF (cos1 .LE. 0) THEN
-    cos2 = cos2 * (-1.0)
-  END IF
-  refr%direction = (r%direction*n1n2) + (inter%normal*((n1n2*cos1) - cos2))
-  refr%source = inter%point
-  refr%depth = r%depth + 1
   refr%filter = r%filter * inter%form%transparency
-  IF ((r%filter .DOT. r%filter) < threshold) THEN
+  IF ((refr%filter .DOT. refr%filter) < threshold) THEN
     color = ZERO_VECTOR
   ELSE
+    ! Lei de snell: sen(teta1)/sen(teta2) = n2/n1
+    ! http://en.wikipedia.org/wiki/Snell_law
+    n1n2 = last_refraction_index/inter%form%refraction
+    cos1 = ((r%direction*(-1.0)) .DOT. inter%normal)
+    cos2 = sqrt(1.0-(n1n2*n1n2)*(1-(cos1*cos1)))
+    IF (cos1 .LE. 0) THEN
+      cos2 = cos2 * (-1.0)
+    END IF
+    refr%direction = (r%direction*n1n2) + (inter%normal*((n1n2*cos1) - cos2))
+    refr%source = inter%point
+    refr%depth = r%depth + 1
     color = raytrace(refr, inter%form%id, inter%form%refraction)
   END IF
 END FUNCTION
