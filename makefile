@@ -5,7 +5,7 @@ FCOPTFLAGS = -O3 -fopenmp -march=native -mfpmath=sse
 MODULES = bin/raymath.o bin/rayforms.o bin/raytest.o
 SRCFILES = src/*
 
-all: raytracer tests images
+all: raytracer tests
 
 # regra para o programa principal
 raytracer: bin/raytracer.o ${MODULES}
