@@ -1,6 +1,6 @@
 FC = gfortran
 FCFLAGS = -Wall -pedantic -Jbin -g
-FCOPTFLAGS = -O3 -fopenmp
+FCOPTFLAGS = -O3 -fopenmp -march=native -mfpmath=sse
 
 MODULES = bin/raymath.o bin/rayforms.o bin/raytest.o
 SRCFILES = src/*

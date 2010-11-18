@@ -12,7 +12,7 @@ PROGRAM raytracer
   TYPE(vector) :: pov, pid, pie, psd, pse
   TYPE(vector) :: pixel
   TYPE(geom_form), ALLOCATABLE :: objects(:)
-  REAL, ALLOCATABLE :: image(:,:,:)
+  CHARACTER, ALLOCATABLE :: image(:,:,:)
 
   ! argumentos da linha de comando
   CHARACTER(50) :: worldfile! arquivo de especificacao do mundo
@@ -39,9 +39,9 @@ PROGRAM raytracer
       pixel = vector_to_unit(((pie - pse) * (real(i)/imgheight) + (psd - pse) * (real(j)/imgwidth) + pse) - pov)
       r = RAY(pov, pixel, ONE_VECTOR, 0)
       color = raytrace(r, -1, 1.0)
-      image(1,j,i) = color%v(1)
-      image(2,j,i) = color%v(2)
-      image(3,j,i) = color%v(3)
+      image(1,j,i) = achar(int(min(1.0, color%v(1)) * 255.))
+      image(2,j,i) = achar(int(min(1.0, color%v(2)) * 255.))
+      image(3,j,i) = achar(int(min(1.0, color%v(3)) * 255.))
     END DO
   END DO
 !$OMP END PARALLEL DO
@@ -58,9 +58,9 @@ PROGRAM raytracer
 
   DO i = 1,imgheight
     DO j = 1,imgwidth
-      WRITE (2, '(A1)',advance='no') achar(int(min(1.0, image(1, j, i)) * 255.))
-      WRITE (2, '(A1)',advance='no') achar(int(min(1.0, image(2, j, i)) * 255.))
-      WRITE (2, '(A1)',advance='no') achar(int(min(1.0, image(3, j, i)) * 255.))
+      WRITE (2, '(A1)',advance='no') image(1, j, i)
+      WRITE (2, '(A1)',advance='no') image(2, j, i)
+      WRITE (2, '(A1)',advance='no') image(3, j, i)
     END DO
   END DO
 
