@@ -87,7 +87,7 @@ bin/raytracer.o: ${MODULES}
 
 # outras regras
 clean:
-	rm -rf bin/* raytracer cena*/imagem.pnm img/* *.mod
+	rm -rf bin/* raytracer cena*/imagem.pnm img/* *.mod *.zip
 
 edit:
 	editor -p ${SRCFILES} makefile
@@ -98,7 +98,7 @@ push: clean
 debug: raytracer
 	gdb --args ./$< cena5/mundo.txt cena5/pov.txt cena5/imagem.pnm 800 800 0.0001 10
 
-pkg:
+pkg: clean
 	git-archive --format=zip --prefix=mac5742-ep1-renato-andre-patricia/ HEAD > mac5742-ep1-renato-andre-patricia.zip
 
 
