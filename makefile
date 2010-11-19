@@ -13,7 +13,7 @@ FCOPTFLAGS = -O3 -no-prec-div -static -openmp
 endif
 
 # intel fortran no pegrande
-ifeq (${COMPILER},"pegrande")
+ifeq (${COMPILER},pegrande)
 FCDIR = /opt/intel/Compiler/11.1/073/bin
 FC = ${FCDIR}/intel64/ifort
 FCFLAGS = -xHost
