@@ -19,15 +19,60 @@ Seções deste arquivo:
 1. Arquivos no diretório.
 -------------------------
 
+Estes são os arquivos presentes no diretório deste trabalho:
+
+.
+|-- README   - este arquivo.
+|-- bin      - pasta para binários gerados pela compilação.
+|-- cena*    - cenas inventadas ou retiradas do forum da matéria.
+|-- doc      - alguma documentação que utilizamos.
+|-- img      - diretório final onde as imagens são armazenadas depois de geradas.
+|-- makefile - o arquivo do gnu make.
+`-- src      - código fonte.
+
 
 2. Como compilar.
 -----------------
+
+Para compilar usando o GNU gfortan, digite:
+
+  $ make
+
+Para compilar utilizando o compilador Intel instalado em ~/intel, digite:
+
+  $ make intel
+
+Para compilar utilizando o compilador Intel instalado em outro diretório, digite:
+
+  $ make intel FCDIR=/outro/diretorio
+
+Para compilar no pegrande, digite:
+
+  $ make pegrande
 
 
 3. Como testar.
 ---------------
 
+Para rodar os testes das bibliotecas e ver o resultado na saída padrão, digite:
+
+  $ make tests
+
 
 4. Como rodar.
 --------------
+
+Para rodar o programa, primeiro compile (item 2 acima) e em seguida faça:
+
+  $ ./raytracer <mundo> <pov> <imagem> <largura> <altura> <limiar> <geracoes>
+
+onde:
+
+  <mundo>    é o arquivo com a descrição do mundo.
+  <pov>      é o arquivo com a descrição do ponto de vista e da janela.
+  <imagem>   é o arquivo de saída para a imagem gerada.
+  <largura>  é a largura da imagem gerada.
+  <altura>   é a altura da imagem gerada.
+  <limiar>   é o valor mínimo para a intensidade de um raio.
+  <geracoes> é o número de vezes que um raio inicial pode gerar novos raios.
 

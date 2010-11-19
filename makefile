@@ -98,5 +98,8 @@ push: clean
 debug: raytracer
 	gdb --args ./$< cena5/mundo.txt cena5/pov.txt cena5/imagem.pnm 800 800 0.0001 10
 
+pkg:
+	git-archive --format=zip --prefix=mac5742-ep1-renato-andre-patricia/ HEAD > mac5742-ep1-renato-andre-patricia.zip
+
 
 .PHONY: all tests clean edit images push debug noop
