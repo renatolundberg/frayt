@@ -14,7 +14,10 @@ endif
 
 # intel fortran no pegrande
 ifeq (${COMPILER},"pegrande")
-FC = /opt/intel/Compiler/11.1/073/bin/intel64/ifort/bin/ifort
+FCDIR = /opt/intel/Compiler/11.1/073/bin
+FC = ${FCDIR}/intel64/ifort
+FCFLAGS = -xHost
+FCOPTFLAGS = -O3 -no-prec-div -static -openmp
 endif
 
 # variaveis do programa
