@@ -3,12 +3,12 @@ MODULE raymath
 
   ! um vetor
   TYPE vector
-     REAL, DIMENSION (4) :: v
+     REAL, DIMENSION (3) :: v
   END TYPE vector
 
   ! uma matriz
   TYPE matrix
-     REAL, DIMENSION(4,4) :: mat
+     REAL, DIMENSION(3,3) :: mat
   END TYPE matrix
 
   ! tipo para retorno de solucoes de equacoes quadraticas
@@ -18,9 +18,9 @@ MODULE raymath
   END TYPE retval
 
   ! o zero
-  TYPE(vector), PARAMETER :: ZERO_VECTOR = vector( (/0,0,0,0/) )
+  TYPE(vector), PARAMETER :: ZERO_VECTOR = vector( (/0,0,0/) )
   ! o um
-  TYPE(vector), PARAMETER :: ONE_VECTOR = vector( (/1,1,1,1/) )
+  TYPE(vector), PARAMETER :: ONE_VECTOR = vector( (/1,1,1/) )
 
   ! definicoes de operadores
   INTERFACE OPERATOR(-)
@@ -50,22 +50,22 @@ MODULE raymath
 CONTAINS
 
 ! transformacao de um vetor de posicao
-PURE FUNCTION pos_vector_transf(m, v)
-  TYPE(vector), INTENT (IN)  :: v
-  TYPE(matrix), INTENT (IN)  :: m
-  TYPE(vector) pos_vector_transf
-  pos_vector_transf%v = MATMUL(m%mat, v%v) + m%mat(1:4,4)
-  RETURN
-END FUNCTION pos_vector_transf
+!PURE FUNCTION pos_vector_transf(m, v)
+!  TYPE(vector), INTENT (IN)  :: v
+!  TYPE(matrix), INTENT (IN)  :: m
+!  TYPE(vector) pos_vector_transf
+!  pos_vector_transf%v = MATMUL(m%mat, v%v) + m%mat(1:4,4)
+!  RETURN
+!END FUNCTION pos_vector_transf
 
 ! transformacao de um vetor de direcao
-PURE FUNCTION dir_vector_transf(m, v)
-  TYPE(vector), INTENT (IN)  :: v
-  TYPE(matrix), INTENT (IN)  :: m
-  TYPE(vector) dir_vector_transf
-  dir_vector_transf%v = MATMUL(m%mat, v%v)
-  RETURN
-END FUNCTION dir_vector_transf
+!PURE FUNCTION dir_vector_transf(m, v)
+!  TYPE(vector), INTENT (IN)  :: v
+!  TYPE(matrix), INTENT (IN)  :: m
+!  TYPE(vector) dir_vector_transf
+!  dir_vector_transf%v = MATMUL(m%mat, v%v)
+!  RETURN
+!END FUNCTION dir_vector_transf
 
 ! subtracao de dois vetores
 PURE FUNCTION vector_subtract(v1, v2)
@@ -114,7 +114,6 @@ PURE FUNCTION vector_cross_product(v1, v2)
   vector_cross_product%v(1) = v1%v(2) * v2%v(3) - v1%v(3) * v2%v(2)
   vector_cross_product%v(2) = v1%v(3) * v2%v(1) - v1%v(1) * v2%v(3)
   vector_cross_product%v(3) = v1%v(1) * v2%v(2) - v1%v(2) * v2%v(1)
-  vector_cross_product%v(4) = 0
   RETURN
 END FUNCTION vector_cross_product
 

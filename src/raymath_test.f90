@@ -5,10 +5,10 @@ PROGRAM raymath_test
 
   TYPE(test_result) :: res = test_result(0, 0)
 
-  CALL test_pos_vector_transf_ident(res)
-  CALL test_pos_vector_transf_real(res)
-  CALL test_dir_vector_transf_ident(res)
-  CALL test_dir_vector_transf_real(res)
+!  CALL test_pos_vector_transf_ident(res)
+!  CALL test_pos_vector_transf_real(res)
+!  CALL test_dir_vector_transf_ident(res)
+!  CALL test_dir_vector_transf_real(res)
   CALL test_vector_subtract(res)
   CALL test_vector_sum(res)
   CALL test_vector_dot_product(res)
@@ -25,82 +25,81 @@ PROGRAM raymath_test
   END IF
 CONTAINS
 
-SUBROUTINE test_pos_vector_transf_ident(res)
-  TYPE(test_result)   :: res
-  TYPE(vector)        :: v = vector((/1, 2, 3/))
-  TYPE(vector)        :: e = vector((/1, 2, 3/))
-  TYPE(matrix)        :: m 
-  TYPE(vector)        :: r
-  LOGICAL             :: failure
-  m%mat(1,1:4) = (/1,0,0,0/)
-  m%mat(2,1:4) = (/0,1,0,0/)
-  m%mat(3,1:4) = (/0,0,1,0/)
-  m%mat(4,1:4) = (/0,0,0,1/)
-  r = pos_vector_transf(m, v)
-  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
-  IF (failure) THEN
-    PRINT *, "pos_vector_transf com matriz identidade falhou. Esperado", e, " mas encontrado ", r
-  END IF
-  RETURN
-END SUBROUTINE test_pos_vector_transf_ident
+!SUBROUTINE test_pos_vector_transf_ident(res)
+!  TYPE(test_result)   :: res
+!  TYPE(vector)        :: v = vector((/1, 2, 3/))
+!  TYPE(vector)        :: e = vector((/1, 2, 3/))
+!  TYPE(matrix)        :: m 
+!  TYPE(vector)        :: r
+!  LOGICAL             :: failure
+!  m%mat(1,1:4) = (/1,0,0)
+!  m%mat(2,1:4) = (/0,1,0)
+!  m%mat(3,1:4) = (/0,0,1)
+!  r = pos_vector_transf(m, v)
+!  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
+!  IF (failure) THEN
+!    PRINT *, "pos_vector_transf com matriz identidade falhou. Esperado", e, " mas encontrado ", r
+!  END IF
+!  RETURN
+!END SUBROUTINE test_pos_vector_transf_ident
+!
+!SUBROUTINE test_pos_vector_transf_real(res)
+!  TYPE(test_result)   :: res
+!  TYPE(vector)        :: v = vector((/3, 5, 7/))
+!  TYPE(vector)        :: e = vector((/REAL(1*3+2*5+3*7+4), REAL(1.1*3+1.2*5+1.3*7+1.4), REAL(2.5*3+3.01*5+2.75*7+2.5)/))
+!  TYPE(matrix)        :: m 
+!  TYPE(vector)        :: r
+!  LOGICAL             :: failure
+!  m%mat(1,1:4) = (/ 1, 2, 3, 4/)
+!  m%mat(2,1:4) = (/1.1,1.2,1.3,1.4/)
+!  m%mat(3,1:4) = (/2.5,3.01,2.75,2.5/)
+!  m%mat(4,1:4) = (/0,0,0,0/)
+!  r = pos_vector_transf(m, v)
+!  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
+!  IF (failure) THEN
+!    PRINT *, "pos_vector_transf com matriz real falhou. Esperado", e, " mas encontrado ", r
+!  END IF
+!  RETURN
+!END SUBROUTINE test_pos_vector_transf_real
 
-SUBROUTINE test_pos_vector_transf_real(res)
-  TYPE(test_result)   :: res
-  TYPE(vector)        :: v = vector((/3, 5, 7/))
-  TYPE(vector)        :: e = vector((/REAL(1*3+2*5+3*7+4), REAL(1.1*3+1.2*5+1.3*7+1.4), REAL(2.5*3+3.01*5+2.75*7+2.5)/))
-  TYPE(matrix)        :: m 
-  TYPE(vector)        :: r
-  LOGICAL             :: failure
-  m%mat(1,1:4) = (/ 1, 2, 3, 4/)
-  m%mat(2,1:4) = (/1.1,1.2,1.3,1.4/)
-  m%mat(3,1:4) = (/2.5,3.01,2.75,2.5/)
-  m%mat(4,1:4) = (/0,0,0,0/)
-  r = pos_vector_transf(m, v)
-  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
-  IF (failure) THEN
-    PRINT *, "pos_vector_transf com matriz real falhou. Esperado", e, " mas encontrado ", r
-  END IF
-  RETURN
-END SUBROUTINE test_pos_vector_transf_real
 
-
-SUBROUTINE test_dir_vector_transf_ident(res)
-  TYPE(test_result)   :: res
-  TYPE(vector)        :: v = vector((/1, 2, 3/))
-  TYPE(vector)        :: e = vector((/1, 2, 3/))
-  TYPE(matrix)        :: m 
-  TYPE(vector)        :: r
-  LOGICAL             :: failure
-  m%mat(1,1:4) = (/1,0,0,0/)
-  m%mat(2,1:4) = (/0,1,0,0/)
-  m%mat(3,1:4) = (/0,0,1,0/)
-  m%mat(4,1:4) = (/0,0,0,0/)
-  r = dir_vector_transf(m, v)
-  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
-  IF (failure) THEN
-    PRINT *, "dir_vector_transf com matriz identidade falhou. Esperado", e, " mas encontrado ", r
-  END IF
-  RETURN
-END SUBROUTINE test_dir_vector_transf_ident
-
-SUBROUTINE test_dir_vector_transf_real(res)
-  TYPE(test_result)   :: res
-  TYPE(vector)        :: v = vector((/3, 5, 7/))
-  TYPE(vector)        :: e = vector((/REAL(1*3+2*5+3*7), REAL(1.1*3+1.2*5+1.3*7), REAL(2.5*3+3.01*5+2.75*7)/))
-  TYPE(matrix)        :: m 
-  TYPE(vector)        :: r
-  LOGICAL             :: failure
-  m%mat(1,1:4) = (/ 1, 2, 3, 4/)
-  m%mat(2,1:4) = (/1.1,1.2,1.3,1.4/)
-  m%mat(3,1:4) = (/2.5,3.01,2.75,2.5/)
-  m%mat(4,1:4) = (/0,0,0,0/)
-  r = dir_vector_transf(m, v)
-  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
-  IF (failure) THEN
-    PRINT *, "dir_vector_transf com matriz real falhou. Esperado", e, " mas encontrado ", r
-  END IF
-  RETURN
-END SUBROUTINE test_dir_vector_transf_real
+!SUBROUTINE test_dir_vector_transf_ident(res)
+!  TYPE(test_result)   :: res
+!  TYPE(vector)        :: v = vector((/1, 2, 3/))
+!  TYPE(vector)        :: e = vector((/1, 2, 3/))
+!  TYPE(matrix)        :: m 
+!  TYPE(vector)        :: r
+!  LOGICAL             :: failure
+!  m%mat(1,1:4) = (/1,0,0,0/)
+!  m%mat(2,1:4) = (/0,1,0,0/)
+!  m%mat(3,1:4) = (/0,0,1,0/)
+!  m%mat(4,1:4) = (/0,0,0,0/)
+!  r = dir_vector_transf(m, v)
+!  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
+!  IF (failure) THEN
+!    PRINT *, "dir_vector_transf com matriz identidade falhou. Esperado", e, " mas encontrado ", r
+!  END IF
+!  RETURN
+!END SUBROUTINE test_dir_vector_transf_ident
+!
+!SUBROUTINE test_dir_vector_transf_real(res)
+!  TYPE(test_result)   :: res
+!  TYPE(vector)        :: v = vector((/3, 5, 7/))
+!  TYPE(vector)        :: e = vector((/REAL(1*3+2*5+3*7), REAL(1.1*3+1.2*5+1.3*7), REAL(2.5*3+3.01*5+2.75*7)/))
+!  TYPE(matrix)        :: m 
+!  TYPE(vector)        :: r
+!  LOGICAL             :: failure
+!  m%mat(1,1:4) = (/ 1, 2, 3, 4/)
+!  m%mat(2,1:4) = (/1.1,1.2,1.3,1.4/)
+!  m%mat(3,1:4) = (/2.5,3.01,2.75,2.5/)
+!  m%mat(4,1:4) = (/0,0,0,0/)
+!  r = dir_vector_transf(m, v)
+!  failure = assertTrue(res, r%v(1) == e%v(1) .AND. r%v(2) == e%v(2) .AND. r%v(3) == e%v(3))
+!  IF (failure) THEN
+!    PRINT *, "dir_vector_transf com matriz real falhou. Esperado", e, " mas encontrado ", r
+!  END IF
+!  RETURN
+!END SUBROUTINE test_dir_vector_transf_real
 
 SUBROUTINE test_vector_subtract(res)
   TYPE(test_result)   :: res

@@ -197,15 +197,15 @@ SUBROUTINE read_povfile
   REAL x, y, z
   OPEN (unit = 1, file = povfile)
   READ (1,*) x,y,z
-  pov = vector((/x,y,z,0./))
+  pov = vector((/x,y,z/))
   READ (1,*) x,y,z
-  pie = vector((/x,y,z,0./))
+  pie = vector((/x,y,z/))
   READ (1,*) x,y,z
-  pse = vector((/x,y,z,0./))
+  pse = vector((/x,y,z/))
   READ (1,*) x,y,z
-  psd = vector((/x,y,z,0./))
+  psd = vector((/x,y,z/))
   READ (1,*) x,y,z
-  pid = vector((/x,y,z,0./))
+  pid = vector((/x,y,z/))
   CLOSE (1)
 END SUBROUTINE
 
@@ -224,25 +224,25 @@ SUBROUTINE read_worldfile
     IF (ios < 0) EXIT objread ! interrompe a leitura caso encontre EOF
     objects(i)%tp = formtype
     READ (1,*) x,y,z
-    luminosity = vector((/x,y,z,0./))
+    luminosity = vector((/x,y,z/))
     READ (1,*) x,y,z
-    reflection = vector((/x,y,z,0./))
+    reflection = vector((/x,y,z/))
     READ (1,*) x,y,z
-    transparency = vector((/x,y,z,0./))
+    transparency = vector((/x,y,z/))
     READ (1, *) refraction
     ! le os dados especificos de cada forma
     SELECT CASE (formtype)
       CASE (0) ! triangulo
         READ (1,*) x,y,z
-        a = vector((/x,y,z,0./))
+        a = vector((/x,y,z/))
         READ (1,*) x,y,z
-        b = vector((/x,y,z,0./))
+        b = vector((/x,y,z/))
         READ (1,*) x,y,z
-        c = vector((/x,y,z,0./))
+        c = vector((/x,y,z/))
         objects(i) = create_triangle(b, c - b, a - b)
       CASE (1) ! esfera
         READ (1,*) r, x,y,z
-        objects(i) = create_sphere(r, vector((/x,y,z,0./)))
+        objects(i) = create_sphere(r, vector((/x,y,z/)))
       CASE DEFAULT
         PRINT *, 'Form type "',formtype,'" not recognized.'
         CALL EXIT(1)

@@ -1,15 +1,38 @@
+# gfortran
 FC = gfortran
+COMPILER = "gfortran"
 FCFLAGS = -Wall -pedantic -Jbin -g
 FCOPTFLAGS = -O3 -fopenmp -march=native -mfpmath=sse
 
+# intel fortran
+ifeq (${COMPILER},intel)
+FCDIR = ~/intel/bin
+FC = ${FCDIR}/ifort
+FCFLAGS = -xHost
+FCOPTFLAGS = -O3 -no-prec-div -static -openmp
+endif
+
+# intel fortran no pegrande
+ifeq (${COMPILER},"pegrande")
+FC = /opt/intel/Compiler/11.1/073/bin/intel64/ifort/bin/ifort
+endif
+
+# variaveis do programa
 MODULES = bin/raymath.o bin/rayforms.o bin/raytest.o
 SRCFILES = src/*
 
 all: raytracer tests
 
 # regra para o programa principal
+intel pegrande:
+	make COMPILER=$@
+
 raytracer: bin/raytracer.o ${MODULES}
+ifeq (${COMPILER},"intel")
+	source ${FCDIR}/ifortvars.sh intel64
+endif
 	${FC} ${FCFLAGS} ${FCOPTFLAGS} -o $@ $^
+
 
 # regra para o programa principal sem otimizações
 noop:
@@ -30,15 +53,27 @@ cena%/imagem.pnm: raytracer
 cena9/imagem.pnm: $(subst imagem.pnm,mundo.txt,$@) $(subst imagem.pnm,pov.txt,$@) raytracer
 	time -a -o tempo.log ./raytracer $(subst imagem.pnm,,$@)mundo.txt $(subst imagem.pnm,,$@)pov.txt $@ 1000 800 0.001 20
 
+cena14/imagem.pnm: $(subst imagem.pnm,mundo.txt,$@) $(subst imagem.pnm,pov.txt,$@) raytracer
+	time -a -o tempo.log ./raytracer $(subst imagem.pnm,,$@)mundo.txt $(subst imagem.pnm,,$@)pov.txt $@ 1600 1600 0.001 20
+
 bin/%_test: bin/%_test.o ${MODULES}
+ifeq (${COMPILER},"intel")
+	source ${FCDIR}/ifortvars.sh intel64
+endif
 	${FC} ${FCFLAGS} ${FCOPTFLAGS} -o $@ $^
 
-# regra geral para .f95 -> .o
-bin/%.o: src/%.f95
+# regra geral para .f90 -> .o
+bin/%.o: src/%.f90
+ifeq (${COMPILER},"intel")
+	source ${FCDIR}/ifortvars.sh intel64
+endif
 	${FC} ${FCFLAGS} ${FCOPTFLAGS} -c $< -o $@
 
 # regra para os testes
 bin/%_test: bin/%_test.o ${MODULES}
+ifeq (${COMPILER},"intel")
+	source ${FCDIR}/ifortvars.sh intel64
+endif
 	${FC} ${FCFLAGS} ${FCOPTFLAGS} -o $@ $^
 
 # dependencias entre modulos
@@ -49,7 +84,7 @@ bin/raytracer.o: ${MODULES}
 
 # outras regras
 clean:
-	rm -rf bin/* raytracer cena*/imagem.pnm img/*
+	rm -rf bin/* raytracer cena*/imagem.pnm img/* *.mod
 
 edit:
 	editor -p ${SRCFILES} makefile
